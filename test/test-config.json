@@ -1,0 +1,68 @@
+[
+  {
+    "name": "XAlternate remove calibre classes",
+    "task": "map-elements",
+    "selector": "[class^=\"calibre\"]",
+    "args": [ {
+      "p": "p|other"
+    } ]
+  }, {
+    "name": "TitleCase text in <h3> and <h4>",
+    "task": "change-case",
+    "selector": "h3, .h3, h4, .h4",
+    "args": [ "title-case" ]
+  }, {
+    "name": "Convert heading classes to heading elements",
+    "task": "map-elements",
+    "selector": "p.h3, p.h4, p.h5a, p.h5b",
+    "args": [ {
+      "p.h3": "h3|other",
+      "p.h4": "h4|other",
+      "p.h5": "h5|other"
+    } ]
+  }, {
+    "name": "Map span.small to <small>",
+    "task": "map-elements",
+    "selector": "span.small",
+    "args": [ {
+      "span.small": "small"
+    } ]
+  }, {
+    "name": "Remove calibre classes",
+    "task": "amend-attrs",
+    "selector": "[class^=\"calibre\"]",
+    "args": [ 
+      {
+        "op": "regex",
+        "attribute": "class",
+        "value": [ "\\s?calibre[\\d]\\s?", "" ]
+      }
+    ]
+  }, {
+    "name": "Add epub:type to body",
+    "task": "amend-attrs",
+    "selector": "",
+    "args": [ 
+      {
+        "op": "add",
+        "attribute": "epub:type",
+        "value": "bodymatter"
+      }
+    ]
+  }, {
+    "name": "Remove inline styles",
+    "task": "amend-attrs",
+    "selector": "[style]",
+    "args": [ 
+      {
+        "op": "remove",
+        "attribute": "style"
+      }
+    ]
+  }, {
+    "name": "Remove extra <span>",
+    "task": "remove-elements",
+    "selector": "span:not([class]):not([id])",
+    "args": [ "keep-content" ]
+  }
+]

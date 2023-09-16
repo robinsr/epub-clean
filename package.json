@@ -1,0 +1,29 @@
+{
+  "name": "epub-clean",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --require @babel/polyfill --require @babel/register './test/**/*.spec.js'",
+    "test-basic": "node index.js ./test/test-doc.html -d -c ./test/test-config.json",
+    "test-diff": "node index.js ./test/test-doc.html -d -fd -c ./test/test-config.json",
+    "test-edge-case": "node index.js ./test/test-doc.html -d -c ./test/edge-case-config.json",
+    "test-config": "node index.js ./test/test-doc.html -d"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "callsites": "^4.1.0",
+    "colors": "^1.4.0",
+    "commander": "^11.0.0",
+    "diff": "^5.1.0",
+    "jsdom": "^22.1.0"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/register": "^7.22.15",
+    "chai": "^4.3.8",
+    "mocha": "^10.2.0"
+  }
+}

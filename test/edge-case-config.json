@@ -1,0 +1,74 @@
+[
+  {
+    "name": "XTitleCase text in <h3> and <h4>",
+    "task": "change-case",
+    "selector": "h3, .h3, h4, .h4",
+    "args": [ "title-case" ]
+  }, {
+    "name": "Convert heading classes to heading elements",
+    "task": "map-elements",
+    "selector": "p.h3, p.h4, p.h5a, p.h5b",
+    "args": [ {
+      "p.h3": "h3.newCls|other",
+      "p.h4": "h4.newCls.2ndClass",
+      "p.h5a": "h5.newCls|all",
+      "p.h5b": "h5.newCls|other"
+    } ]
+  }, {
+    "name": "Add no-link-class and no-text-class to class-less <a> and <p>",
+    "task": "map-elements",
+    "selector": ":not([class])",
+    "args": [ {
+      "a": "a.no-link-class",
+      "p": "p.no-text-class"
+    } ]
+  }, {
+    "name": "XAdd text class to non-hidden p",
+    "task": "map-elements",
+    "selector": "p:not([class])",
+    "args": [ {
+      "p:not([hidden])": "p.not-hidden",
+      "p[hidden]": "p.hidden"
+    } ]
+  }, {
+    "name": "namespace test",
+    "task": "map-elements",
+    "selector": "p:not([class])",
+    "args": [ {
+      "p:not([hidden])|abc": "p.not-hidden",
+      "p[hidden]|xyz|": "p.hidden"
+    } ]
+  }, {
+    "name": "Xmap span.small to <small>",
+    "task": "map-elements",
+    "selector": "span.small",
+    "args": [ {
+      "span.small": "small"
+    } ]
+  }, {
+    "name": "Xremove calibre classes",
+    "task": "amend-attrs",
+    "selector": "[class^=\"calibre\"]",
+    "args": [ 
+      {
+        "op": "regex",
+        "attribute": "class",
+        "value": [ "calibre[\\d]", "" ]
+      }, {
+        "op": "remove",
+        "attribute": "tabindex"
+      }, {
+        "op": "replace",
+        "attribute": "tabindex",
+        "value": 100
+      }, {
+        
+      }
+    ]
+  }, {
+    "name": "Xremove-extra-spans",
+    "task": "remove-elements",
+    "selector": "span:not([class]):not([id])",
+    "args": [ "keep-content" ]
+  }
+]
