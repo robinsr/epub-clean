@@ -1,15 +1,4 @@
-import TaskResult from './task-result.js';
 
-/**
- * Creates new DOM elements
- */
-export const createEl = ($, htmlString) => {
-  var div = $.createElement('div');
-  div.innerHTML = htmlString.trim();
-
-  // Change this to div.childNodes to support multiple top-level nodes.
-  return div.firstChild;
-}
 
 /**
  * Traverses a DOM tree, appling a callback
@@ -27,12 +16,6 @@ export const walkTree = (node, func) => {
   }
 }
 
-const empty_result = { remove: [], replace: [], html: null };
-
-export const result = (opts = {}) => {
-  //return Object.assign({}, empty_result, opts);
-  return new TaskResult();
-}
 
 export const validate_task = (config, args) => {
   if (!config) {

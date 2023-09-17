@@ -1,6 +1,8 @@
 ePub-Clean
 ==========
 
+CLI to transform/reformat ePub (or any HTML) content.
+
 ## Config
 
 Tasks are defined in a JSON file, and passed to epub-clean command-line using the required `-c/--config` option.
@@ -21,11 +23,19 @@ Example config JSON:
 ]
 ```
 
+See [test-config.json](./test/test-config.json) for more examples
+
+Example running:
+
+```sh
+node epub-clean ./OPS/epub-chapter1.xhtml -c clean-config.json
+```
+
+
 ### Config properties
 
-* `name`: a unique name for the task
-* `task`: the type of task being configured
-    *  TODO: change to `type`
+* `name`: a unique name for the task being configured
+* `task`: name of task type (see options below)
 * `selector`: a CSS selector string to select which nodes to perform the task on. Anything supported by `document.querySelectorAll` is supported (see [querySelectorAll (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll))
 * `args`: Array of arguments required by the task type
 
@@ -46,13 +56,49 @@ Args:
         2. for `remove`: no argument supplied
 
 
-### `change-case` - Change Case
+Example:
 
+```json
+{
+  "name": "Remove calibre classes",
+  "task": "amend-attrs",
+  "selector": "[class^=\"calibre\"]",
+  "args": [ 
+    {
+      "op": "regex",
+      "attribute": "class",
+      "value": [ "\\s?calibre[\\d]\\s?", "" ]
+    }
+  ]
+}
+```
+
+
+---
+
+### `change-case` - Change Case
 
 Args:
 
 1. one of ( `title-case` | `lower-case` | `upper-case` )
 
+Example:
+
+```json
+[
+  {
+    "name": "Title-case headings",
+    "task": "change-case",
+    "selector": "h1, h2, h3, h4",
+    "args": [
+      "title-case"
+    ]
+  }
+]
+```
+
+
+---
 
 ### `map-elements` - Map Elements
 
@@ -124,6 +170,8 @@ Produces:
 ```
 
 
+---
+
 ### `remove-elements` - Remove Elements
 
 Args:
@@ -135,5 +183,10 @@ Args:
 Example:
 
 ```json
-
+{
+  "name": "Remove extra <span>",
+  "task": "remove-elements",
+  "selector": "span:not([class]):not([id])",
+  "args": [ "keep-content" ]
+}
 ```

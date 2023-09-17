@@ -1,12 +1,5 @@
 [
   {
-    "name": "XAlternate remove calibre classes",
-    "task": "map-elements",
-    "selector": "[class^=\"calibre\"]",
-    "args": [ {
-      "p": "p|other"
-    } ]
-  }, {
     "name": "TitleCase text in <h3> and <h4>",
     "task": "change-case",
     "selector": "h3, .h3, h4, .h4",
@@ -39,6 +32,13 @@
       }
     ]
   }, {
+    "name": "X - TODO - Alternate remove calibre classes",
+    "task": "map-elements",
+    "selector": "[class^=\"calibre\"]",
+    "args": [ {
+      "p": "p|other"
+    } ]
+  }, {
     "name": "Add epub:type to body",
     "task": "amend-attrs",
     "selector": "",
@@ -64,5 +64,24 @@
     "task": "remove-elements",
     "selector": "span:not([class]):not([id])",
     "args": [ "keep-content" ]
+  }, {
+    "name": "X - TODO - Convert sibling <p> elements into <figure>",
+    "task": "todo",
+    "selector": [ "p.quote", "p.quote-src" ],
+    "args": [
+      {
+        "next": "p.quote-src"
+      }
+    ]
+  }, {
+    "name": "X - TODO - Group list items",
+    "task": "group-elements",
+    "selector": "p.ul-li",
+    "args": [
+      {
+        "wrapper": "ul.new-list",
+        "keep-class": false
+      }
+    ]
   }
 ]

@@ -1,6 +1,5 @@
 
-
-export default class TaskResult {
+class TaskResult {
   constructor(target) {
     this.target = target;
     this._remove = [];
@@ -37,3 +36,9 @@ export default class TaskResult {
     }
   }
 }
+
+const result = (opts = {}) => {
+  return new TaskResult();
+}
+
+export default result;
