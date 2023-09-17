@@ -110,9 +110,13 @@ const TaskRunner = (adapter, opts) => {
     });
   });
 
-  adapter.query('[data-rid]').forEach(t => {
-    t.removeAttr('data-rid');
-  })
+  adapter.query('[data-rid]').forEach(n => {
+    n.removeAttr('data-rid');
+  });
+
+  adapter.query('').forEach(n => {
+    n.removeAttr('data-rid');
+  });
 }
 
 export default TaskRunner;

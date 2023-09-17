@@ -39,6 +39,10 @@ export const debug = (...msg) => {
 }
 
 
+const scrubId = (str) => {
+  return str.replaceAll(/\s?data-rid="[\d\w]+"\s?/g, '');
+}
+
 const diffHeader = name => {
   console.log('[DIFF] '.grey + `(${name}):`.white);
 }
@@ -48,7 +52,7 @@ export const diffChars = (before = '', after  = '', name) => {
     diffHeader(name);
   }
 
-  return print(dc(before, after));
+  return print(dc(scrubId(before), scrubId(after)));
 }
 
 export const diffLines = (before = '', after = '', name) => {
@@ -56,14 +60,14 @@ export const diffLines = (before = '', after = '', name) => {
     diffHeader(name);
   }
 
-  return print(dl(before, after), true);
+  return print(dl(scrubId(before), scrubId(after)), true);
 }
 
 const print = (diff, line_break) => {
   diff.forEach(part => {
     // green for additions, red for deletions grey for common parts
     const color = part.added ? 'green' : part.removed ? 'red' : 'grey';
-    process.stderr.write(part.value[color]);
+    process.stderr.write('\t' + part.value[color]);
     
     line_break && process.stderr.write('\n');
   });
