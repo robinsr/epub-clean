@@ -1,4 +1,4 @@
-import { createEl, result } from './task-utils.js'
+import result from './task-result.js'
 
 /**
  * TODO: How to make this configurable?

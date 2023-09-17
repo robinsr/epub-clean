@@ -13,27 +13,47 @@ const caller = () => {
 
 export const log = (...msg) => {
   let { line_no, filename, name } = caller();
-  console.log(`${name}:${line_no}:`, ...msg);
+  console.log(`[INFO] (${name}:${line_no}):`.cyan, ...msg);
+}
+
+export const info = (...msg) => {
+  let { line_no, filename, name } = caller();
+  console.log(`[INFO] (${name}:${line_no}):`.cyan, ...msg);
+}
+
+export const warn = (msg, ...rest) => {
+  let { line_no, filename, name } = caller();
+  console.warn(`[WARN] (${name}:${line_no}): ${msg}`.yellow, ...rest);
+}
+
+export const error = (msg, ...rest) => {
+  let { line_no, filename, name } = caller();
+  console.warn(`[ERROR] (${name}:${line_no}): ${msg}`.red.inverse, ...rest);
+  console.trace();
 }
 
 export const debug = (...msg) => {
   return;
   let { line_no, filename, name } = caller();
-  console.debug(`${name}:${line_no}:`, ...msg);
+  console.debug(`[DEBUG] (${name}:${line_no}):`, ...msg);
 }
 
 
-export const diffChars = (before, after, name) => {
+const diffHeader = name => {
+  console.log('[DIFF] '.grey + `(${name}):`.white);
+}
+
+export const diffChars = (before = '', after  = '', name) => {
   if (name) {
-    console.log(`(${name}) diff:`);
+    diffHeader(name);
   }
 
   return print(dc(before, after));
 }
 
-export const diffLines = (before, after, name) => {
+export const diffLines = (before = '', after = '', name) => {
   if (name) {
-    console.log(`(${name}) diff:`);
+    diffHeader(name);
   }
 
   return print(dl(before, after), true);

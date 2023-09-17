@@ -1,71 +1,60 @@
-import { result, createEl, validate_task } from './task-utils.js';
-import { getTag, getTagSelector } from '../tag.js';
+import { validate_task } from './task-utils.js'
+import result from './task-result.js';
+import { error } from '../log.js';
 
 
 const remove_attrs = (config) => {
-  validate_task(config)  
+  validate_task(config);
+
   let { name, selector, args } = config;
 
   return {
     name,
     selector,
     filter: (node) => true,
-    transform: ($, node) => {
-
-      // TODO, data attributes. Not super important
-      // 
-      // const getAttribute = (n, attr) => {
-      //   if (attr.startsWith('data-')) {
-      //     return n.dataset[attr.replace('data-','')]
-      //   } else {
-      //     return n.getAttribute(attr);
-      //   }
-      // }
-
-      const applyUpdates = (newNode, conf) => {
+    transform: (node) => {
+      const applyUpdates = (node, conf) => {
         let { attribute, op, value } = conf;
 
-        let currentVal = newNode.getAttribute(attribute);
+        let currentVal = node.getAttr(attribute);
 
         if (op === 'add') {
-          newNode.setAttribute(attribute, value);
+          node.setAttr(attribute, value);
         }
 
         if (op === 'regex') {
           if (!currentVal) {
-            console.error(`ERROR: Cannot update attribute ${attribute} on ${getTagSelector(newNode)}`.red)
-            return newNode;
+            error(`Cannot update attribute ${attribute} on ${node.tag}`);
+            return node;
           }
 
           let re = new RegExp(value[0]);
           let replaceVal = currentVal.replace(re, value[1]);
-          newNode.setAttribute(attribute, replaceVal);
+          node.setAttr(attribute, replaceVal);
         }
 
-        if (op === 'replace' && newNode.hasAttribute(attribute)) {
-          newNode.setAttribute(attribute, value);
+        if (op === 'replace' && node.hasAttr(attribute)) {
+          node.setAttr(attribute, value);
         }
 
         if (op === 'remove') {
-          newNode.removeAttribute(attribute);
+          node.removeAttr(attribute);
         }
 
-        if (newNode.getAttribute(attribute) === '') {
-          newNode.removeAttribute(attribute);
+        if (node.getAttr(attribute) === '') {
+          node.removeAttr(attribute);
         }
 
-        return newNode;
+        return node;
       }
       
-      if (getTag(node) !== 'body') {
-        let newNode = args.reduce(applyUpdates, node.cloneNode(true));
+      if (node.tag !== 'body') {
+        let newNode = args.reduce(applyUpdates, node.clone());
         return result().replace(node, newNode).final();
       } else {
         args.reduce(applyUpdates, node);
         return result().final();
       }
-
-
     }
   }
 }
@@ -73,8 +62,17 @@ const remove_attrs = (config) => {
 export default remove_attrs;
 
 
-      //let attrs = node.getAttributeNames()
-      //console.log(attrs);
-      // Array.from(attrs).forEach(attr => {
-      //   console.log(attr, node.getAttribute(attr));
-      // });
+//let attrs = node.getAttributeNames()
+//console.log(attrs);
+// Array.from(attrs).forEach(attr => {
+//   console.log(attr, node.getAttribute(attr));
+// });
+//       // TODO, data attributes. Not super important
+// 
+// const getAttribute = (n, attr) => {
+//   if (attr.startsWith('data-')) {
+//     return n.dataset[attr.replace('data-','')]
+//   } else {
+//     return n.getAttribute(attr);
+//   }
+// }

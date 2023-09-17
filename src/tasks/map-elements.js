@@ -1,11 +1,10 @@
-import { createEl, result, validate_task } from './task-utils.js'
+import { validate_task } from './task-utils.js'
+import result from './task-result.js';
 import { 
-  getClassList,
-  getTag,
   parseTagExpression,
   removeNamespaces,
   getNamespaces
-} from '../tag.js';
+} from '../dom/selectors.js';
 import { debug } from '../log.js';
 
 
@@ -41,7 +40,8 @@ const map_elements = (config) => {
   return {
     name,
     selector,
-    transform: ($, node) => {
+    filter: (node) => true,
+    transform: (node, dom) => {
       let matchKey = elementMapKeys.find(key => {
         return node.matches(removeNamespaces(key));
       });
@@ -59,11 +59,11 @@ const map_elements = (config) => {
       debug('Match Props:', matchProps);
       debug('New Props:', newProps);
 
-      //let { newTag, newClss, preserveAll, preserveOther } = elementMap[match];
       let newTag = newProps.tag;
       let matchingCls = matchProps.classList;
-      let oldClss = getClassList(node);
+      let oldClss = node.classList;
       let newClss = newProps.classList;
+      let content = node.inner;
 
       // preserve all
       if (newProps.preserveAll) {
@@ -78,8 +78,7 @@ const map_elements = (config) => {
 
       let classString = newClss.length ? ` class="${newClss.join(' ')}"` : "";
 
-      let newNode = createEl($, 
-        `<${newTag}${classString}>${node.innerHTML}</${newTag}>`);
+      let newNode = dom.newNode(`<${newTag}${classString}>${content}</${newTag}>`);
 
 
       return result().replace(node, newNode).final();

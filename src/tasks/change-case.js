@@ -1,7 +1,8 @@
-import { result, walkTree, validate_task } from './task-utils.js';
+import { walkTree, validate_task } from './task-utils.js';
+import result from './task-result.js';
 
 const toTitleCase = n => {
-  n.textContent = n.textContent.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+  n.text = n.text.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 }
 
 const toUpperCase = n => {
@@ -29,33 +30,36 @@ const change_case = (config) => {
 
   let { name, selector, args } = config;
 
+  if (!Object.keys(transform_map).includes(args[0])) {
+    throw new Error(`Invalid case argument: ${args[0]}`);
+  }
+
+  let textFunc = transform_map[args[0]];
+
   return {
     name,
     selector,
-    transform: ($, node) => {
-      let str = node.textContent;
+    filter: (node) => true,
+    transform: (node) => {
 
-      if (!str) {
-        return empty_result; 
+      if (!node.text) {
+        return result().error('Node contains no text').final();
       }
 
-      if (!Object.keys(transform_map).includes(args[0])) {
-        return result().error().final();
-      }
+      let newNode = node.clone();
 
-      let new_el = node.cloneNode(true);
-
-      if (node.hasChildNodes()) {
-        walkTree(new_el, transform_map[args[0]]);
+      if (node.hasChildren) {
+        walkTree(newNode, textFunc);
       } else {
-        transform_map[args[0]](new_el);
+        textFunc(newNode);
       }
 
-      if (node.textContent === new_el.textContent) {
-        return result().close();
+      if (node.text === newNode.text) {
+        return result().error('No text changed').final();
       }
 
-      return result().replace(node, new_el).final();
+      return result().html(newNode).final();
+      //return result().replace(node, newNode).final();
     }
   }
 }

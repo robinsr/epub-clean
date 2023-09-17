@@ -8,9 +8,8 @@
  * with formatting elements (<b>, <i>, etc)
  */
 export const walkTree = (node, func) => {
-  //log(logEl(node));
-  if (node.hasChildNodes()) {
-    Array.from(node.childNodes).forEach(n => walkTree(n, func));
+  if (node.hasChildren) {
+    node.children.forEach(n => walkTree(n, func));
   } else {
     func(node);
   }

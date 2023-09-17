@@ -1,4 +1,5 @@
-import { result, validate_task } from './task-utils.js'
+import { validate_task } from './task-utils.js'
+import result from './task-result.js';
 
 const KEEP = 'keep-content';
 
@@ -16,17 +17,10 @@ const remove_elements = (config) => {
   return {
     name,
     selector,
-    filter: (node) => {
-      // filtering can be done with css :not selector
-      // for the most part. So this function is not
-      // really needed
-
-      //node.classList.length == 0 && !node.id;
-      return true;
-    },
-    transform: ($, node) => {
+    filter: (node) => true,
+    transform: (node) => {
       if (keepContent) {
-        return result().html(node.innerHTML).final();
+        return result().html(node.inner).final();
       } else {
         return result().remove(node).final();
       }

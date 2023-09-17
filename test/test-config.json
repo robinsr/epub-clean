@@ -2,16 +2,17 @@
   {
     "name": "TitleCase text in <h3> and <h4>",
     "task": "change-case",
-    "selector": "h3, .h3, h4, .h4",
+    "selector": "h2, .h2, h3, .h3, h4, .h4, h5, .h5a, .h5b",
     "args": [ "title-case" ]
   }, {
     "name": "Convert heading classes to heading elements",
     "task": "map-elements",
-    "selector": "p.h3, p.h4, p.h5a, p.h5b",
+    "selector": "p[class^=\"h\"]",
     "args": [ {
-      "p.h3": "h3|other",
+      "p.h2": "h2",
+      "p.h3": "h3|all",
       "p.h4": "h4|other",
-      "p.h5": "h5|other"
+      "p.h5a, p.h5b": "h5|other"
     } ]
   }, {
     "name": "Map span.small to <small>",
@@ -64,15 +65,6 @@
     "task": "remove-elements",
     "selector": "span:not([class]):not([id])",
     "args": [ "keep-content" ]
-  }, {
-    "name": "X - TODO - Convert sibling <p> elements into <figure>",
-    "task": "todo",
-    "selector": [ "p.quote", "p.quote-src" ],
-    "args": [
-      {
-        "next": "p.quote-src"
-      }
-    ]
   }, {
     "name": "X - TODO - Group list items",
     "task": "group-elements",

@@ -1,44 +1,56 @@
+const TaskResult = () => {
+  let _remove = [];
+  let _replace = [];
+  let _html = null;
+  let _error = null;
+ 
+  return {
+    remove(node) {
+      _remove.push(node);
+      return this;
+    },
 
-class TaskResult {
-  constructor(target) {
-    this.target = target;
-    this._remove = [];
-    this._replace = [];
-    this._html = null;
-    this._error = null;
-  }
+    replace(oldNode, newNode) {
+      _replace.push([oldNode, newNode]);
+      return this;
+    },
 
-  remove(node) {
-    this._remove.push(node);
-    return this;
-  }
+    html(html) {
+      _html = html;
+      return this;
+    },
 
-  replace(oldNode, newNode) {
-    this._replace.push([oldNode, newNode]);
-    return this;
-  }
+    error(err) {
+      _error = err;
+      return this;
+    },
 
-  html(html) {
-    this._html = html;
-    return this;
-  }
+    get noChange() {
+      return empty(_remove) && empty(_replace) && 
+      empty(_html) && empty(_error);
+    },
 
-  error(err) {
-    this._error = err;
-    return this;
-  }
-
-  final() {
-    return {
-      remove: this._remove,
-      replace: this._replace,
-      html: this._html
+    final() {
+      return {
+        noChange: this.noChange,
+        remove: _remove,
+        replace: _replace,
+        html: _html,
+        error: _error
+      }
     }
   }
 }
 
+const empty = arr => {
+  if (arr === null) return true;
+  if (typeof arr === 'string' && arr === '') return true
+  if (Array.isArray(arr) && arr.length === 0) return true;
+  return false;
+}
+
 const result = (opts = {}) => {
-  return new TaskResult();
+  return TaskResult();
 }
 
 export default result;

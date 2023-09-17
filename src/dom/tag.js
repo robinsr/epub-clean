@@ -1,85 +1,61 @@
+const Tag = (node, location) => {
+  return {
+    /**
+     * Returns a string array of the tag expression
+     * of a given node, one per class attribute
+     *
+     * Example:
+     * 
+     * for a node created from the tag:
+     *     <p class="h3 extra"></p>
+     *
+     * function will return [ 'p.h3', 'p.extra' ]
+     * @unused
+     */
+    get selectors() {
+      if (!node.classList.length) {
+        return [ node.tag ];
+      }
 
-/**
- * Returns the tag type for a given node
- * or non-null string in the case of a 
- * text node that has no tag type (?)
- *
- * eg <p class="h3 extra"></p> -> "p" 
- */
-export const getTag = n => {
-  return (n.tagName||'?').toLowerCase();
-}
+      return node.classList.map(cls => `${ node.tag }.${ cls }`);
+    },
 
-/**
- * Returns the classList for a node as an array
- */
-export const getClassList = n => {
-  return Array.from(n.classList) || [];
-}
+    /**
+     * Returns a string of the tag expression of
+     * a given node with the class attributes combined
+     *
+     * Example:
+     * 
+     * for a node created from the tag:
+     *     <p class="h3 extra"></p>
+     *
+     * function will return 'p.h3.extra'
+     */
+    get selector() {
+      if (!node.classList.length) {
+        return node.tag;
+      }
 
-/**
- * Returns a string array of the tag expression
- * of a given node, one per class attribute
- *
- * Example:
- * 
- * for a node created from the tag:
- *     <p class="h3 extra"></p>
- *
- * function will return [ 'p.h3', 'p.extra' ]
- * @unused
- */
-export const getTagSelectors = n => {
-  let tag = getTag(n);
-  let clss = getClassList(n);
+      return `${ node.tag }.${ node.classList.join('.') }`
+    },
 
-  if (!clss.length) {
-    return [ tag ];
+    /**
+     * Returns a printable "summary" of a tag. Example:
+     * 
+     * 0024: <p.h3.extra(ELEMENT)>⇒[1], contents: Lorem ipsum...
+     */
+    get tagSummary() {
+      let tag = `<#${node.id}${node.selector}(${node.type})>`;
+      let child = node.childCount || 0;
+      let content = truncate(node.text || 'EMPTY', 80);
+
+      if (location) {
+        return `${location}: ${tag}⇒[${child}], contents: ${content}`;
+      }
+
+      return `${tag}⇒[${child}], contents: ${content}`;
+    }
   }
-
-  return clss.map(cls => `${ tag }.${ cls }`);
-}
-
-/**
- * Returns a string of the tag expression of
- * a given node with the class attributes combined
- *
- * Example:
- * 
- * for a node created from the tag:
- *     <p class="h3 extra"></p>
- *
- * function will return 'p.h3.extra'
- */
-export const getTagSelector = n => {
-  let tag = getTag(n);
-  let clss = getClassList(n);
-
-  if (!clss.length) {
-    return tag;
-  }
-
-  return `${ tag }.${ clss.join('.') }`
-}
-
-/**
- * Returns a printable "summary" of a tag. Example:
- * 
- * 0024: <p.h3.extra(ELEMENT)>⇒[1], contents: Lorem ipsum...
- */
-export const getTagSummary = (n, $) => {
-  let tag = `<${getTagSelector(n)}(${NODE_TYPES[n.nodeType]})>`;
-  let child = n.childElementCount || 0;
-  let content = truncate(n.textContent || 'EMPTY', 80);
-
-  if ($) {
-    let loc = $.nodeLocation(n);
-    let line = loc ? ("" + loc.startLine).padStart(4, '0') : 'NEW';
-
-    return `${line}: ${tag}⇒[${child}], contents: ${content}`;
-  }
-
-  return `${tag}⇒[${child}], contents: ${content}`;
 }
 
 
@@ -90,17 +66,10 @@ const truncate = (str, num) => {
     return str
   }
   // Return str truncated with '...' concatenated to the end of str.
-  return str.slice(0, num) + '...'
+  let truncated = str.slice(0, num) + '...';
+
+  return truncated.replaceAll('\n', '\\n')
 }
 
-const NODE_TYPES = {
-  1: 'ELEMENT',
-  2: 'ATTRIBUTE',
-  3: 'TEXT',
-  4: 'CDATA_SECTION',
-  7: 'PROCESSING_INSTRUCTION',
-  8: 'COMMENT',
-  9: 'DOCUMENT',
-  10: 'DOCUMENT_TYPE',
-  11: 'DOCUMENT_FRAGMENT',
-}
+
+export default Tag;

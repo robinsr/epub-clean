@@ -16,11 +16,11 @@ program
   .requiredOption('-c, --config <type>', 'list of tasks to perform')
   .option('-d, --debug', 'redirect output to test/test-output.html')
   .option('-fd, --full-diff', 'prints full file diff')
-  .action((source, opts) => {
-    console.log(source);
-    console.log(opts);
-
-    clean(source, opts);
+  .option('--dryrun', 'does not write output')
+  .option('--targets', 'prints targets to by updated without performing updates')
+  .action((filename, opts) => {
+    global.__opts = opts;
+    clean(filename, opts)
   });
 
 program.parse();
