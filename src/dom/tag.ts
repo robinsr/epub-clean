@@ -1,4 +1,13 @@
-const Tag = (node, location) => {
+import { DomNode } from "./adapter/node.js";
+
+export interface TagNode {
+  get selectors(): string[];
+  get selector(): string;
+  get tagSummary(): string;
+}
+
+
+const Tag = (node: DomNode, location: string): TagNode => {
   return {
     /**
      * Returns a string array of the tag expression
@@ -44,8 +53,8 @@ const Tag = (node, location) => {
      * 
      * 0024: <p.h3.extra(ELEMENT)>⇒[1], contents: Lorem ipsum...
      */
-    get tagSummary() {
-      let tag = `<#${node.id}${node.selector}(${node.type})>`;
+    get tagSummary(): string {
+      let tag = `<#${node.id}${this.selector}(${node.type})>`;
       let child = node.childCount || 0;
       let content = truncate(node.text || 'EMPTY', 80);
 
@@ -59,7 +68,7 @@ const Tag = (node, location) => {
 }
 
 
-const truncate = (str, num) => {
+const truncate = (str: string, num: number): string => {
   // If the length of str is less than or equal to num
   // just return str--don't truncate it.
   if (str.length <= num) {

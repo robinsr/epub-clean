@@ -1,21 +1,32 @@
 import ShortUniqueId from 'short-unique-id';
 
-import Tag from '../tag.js';
-import { debug, error, info, warn } from '../../log.js';
+import Tag, { TagNode } from '../tag.js';
+import { debug, error } from '../../log.js';
+import { AccessNode, DomNode, NODE_TYPES } from './node.js';
 
-const short = new ShortUniqueId({ length: 8 });
+import jsdom from 'jsdom';
+
+
+
+
+const short = new ShortUniqueId.default({ length: 8 })
 const uuid = () => {
-  return short.rnd()
+  return short.rnd();
 }
 
-const JSDOMNode = (dom, node) => {
+const isElement = (node) => {
+  return NODE_TYPES[node.nodeType] === 'ELEMENT';
+}
+
+
+const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
   let _node = node;
   let doc = dom.window.document;
   
   if (!_node) {
     //throw new Error('no DOM node supplied')
     error('No DOM node supplied');
-    return doc;
+    //return doc;
   }
 
   let location = (n => {
@@ -27,7 +38,7 @@ const JSDOMNode = (dom, node) => {
     _node.dataset.rid = uuid();
   }
 
-  let accessors = {
+  let accessors: DomNode = {
     get node() {
       return _node;
     },
@@ -77,7 +88,7 @@ const JSDOMNode = (dom, node) => {
     },
 
     clone() {
-      return JSDOMNode(dom, _node.cloneNode(true));
+      return JSDOMNode(dom, _node.cloneNode(true) as HTMLElement);
     },
 
     get outer() {
@@ -120,9 +131,9 @@ const JSDOMNode = (dom, node) => {
       return NODE_TYPES[_node.nodeType] === 'TEXT';
     },
 
-    get attrs() {
-      return _node.getAttributes();
-    },
+    // get attrs() {
+    //   return _node.getAttributes();
+    // },
 
     getAttr(attribute) {
       return _node.getAttribute(attribute);
@@ -141,11 +152,11 @@ const JSDOMNode = (dom, node) => {
     },
 
     hasClass(className) {
-      return _node.classList.includes(className);
+      return [..._node.classList].includes(className);
     },
 
     addClass(className) {
-      return _node.classList.add(className);
+      _node.classList.add(className);
     },
 
     /** @unused */
@@ -158,7 +169,7 @@ const JSDOMNode = (dom, node) => {
     },
 
     get children() {
-      return Array.from(_node.childNodes).map(child => JSDOMNode(dom, child));
+      return Array.from(_node.childNodes).map(child => JSDOMNode(dom, child as HTMLElement));
     },
 
     get hasChildren() {
@@ -169,12 +180,8 @@ const JSDOMNode = (dom, node) => {
       return _node.childElementCount;
     },
 
-    contains(node = {}) {
-      if (node.node) {
-        return _node.contains(node.node);
-      } else {
-        return _node.contains(node);
-      }
+    contains(node) {
+      return _node.contains(node.node);
     },
 
     isSameNode(node) {
@@ -182,31 +189,12 @@ const JSDOMNode = (dom, node) => {
     },
 
     get parent() {
-      return JSDOMNode(dom, _node.parentNode);
+      return JSDOMNode(dom, _node.parentNode as HTMLElement);
     }
   }
 
   return Object.assign(accessors, Tag(accessors, location));
 }
 
-const isElement = (node) => {
-  return NODE_TYPES[node.nodeType] === 'ELEMENT';
-}
-
-const isText = (node) => {
-  return NODE_TYPES[node.nodeType] === 'TEXT';
-}
-
-const NODE_TYPES = {
-  1: 'ELEMENT',
-  2: 'ATTRIBUTE',
-  3: 'TEXT',
-  4: 'CDATA_SECTION',
-  7: 'PROCESSING_INSTRUCTION',
-  8: 'COMMENT',
-  9: 'DOCUMENT',
-  10: 'DOCUMENT_TYPE',
-  11: 'DOCUMENT_FRAGMENT',
-}
 
 export default JSDOMNode;
