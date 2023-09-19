@@ -3,25 +3,45 @@ import JSDOMAdapter from '../../src/dom/adapter/jsdom-adapter.js';
 import mapElements from '../../src/tasks/map-elements.js';
 
 import { expect } from 'chai';
+import { describe } from 'node:test';
 
-const props = (obj) => {
-  console.log(Object.getOwnPropertyNames(obj));
-}
+// const props = (obj) => {
+//   console.log(Object.getOwnPropertyNames(obj));
+// }
 
 const getTask = (name, selector, args) => ({
-  name, selector, task: 'map-elements', args: [ args ]
+  name, selector, task: 'map-elements', map: args
 })
 
 const setupTest = (taskConfig, fragment) => {
-  let task = mapElements(taskConfig);
+  let { selector, parse, transform } = mapElements(taskConfig);
+  let parsed = parse(taskConfig);
   let adapter = JSDOMAdapter(StringAdapter(fragment));
-  let nodes = adapter.query(task.selector);
-  let results = nodes.map(n => task.transform(n, adapter));
+  let nodes = adapter.query(selector);
+  let results = nodes.map(n => transform(parsed, n, adapter));
 
-  return { task, adapter, nodes, results };
+  return { adapter, nodes, results };
 }
 
 describe('MapElements', function () {
+
+  describe('it returns an error for mismatched args', function() {
+    let taskConfig = getTask(
+      'This task does not computed',
+      'p.awesome-text',
+      {
+        'img.awesome-image': 'div.image-removed'
+      });
+
+    let fragment = `<div id="test-fragment">
+      <p class="awesome-text">Lorem ipsum</p>
+    </div>`
+
+      let { results } = setupTest(taskConfig, fragment);
+
+      expect(results[0]).to.have.property('error');
+  })
+
   describe('basic element and class transform', function() {
 
     let taskConfig = getTask(
@@ -59,8 +79,6 @@ describe('MapElements', function () {
     });
 
     it('Converts from one element to another', function () {
-      let replace = results[0].replace;
-
       results.map(r => r.replace[0])
         .forEach((replace, i) => {
           expect(replace).to.have.length(2);
@@ -100,8 +118,6 @@ describe('MapElements', function () {
     });
 
     it('Applies updates as expected', function () {
-      let replace = results[0].replace;
-
       results.map(r => r.replace[0])
         .forEach((replace, i) => {
           expect(replace).to.have.length(2);

@@ -17,7 +17,7 @@ async function run(filename, opts) {
   const adapter = JSDOMAdapter(FileAdapter(filename));
   const taskRunner = TaskRunner(adapter, opts);
 
-  const modified_html = adapter.contents.replace(/<body[\w\W]+<\/body>/, adapter.body);
+  const modified_html = adapter.getContents().replace(/<body[\w\W]+<\/body>/, adapter.body);
 
   if (opts.fullDiff) {
     diffLines(adapter.contents, modified_html, 'All Changes');

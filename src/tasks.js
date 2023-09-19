@@ -24,11 +24,3 @@ const getTask = (taskName) => {
 }
 
 export default getTask;
-
-
-/**
- * TODOs
- *
- * - Remove empty links, eg <a id="pg_135"></a>
- * - Remove calibre classes, eg <em class="calibre1">my</em>
- */

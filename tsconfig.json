@@ -20,5 +20,5 @@
     "noImplicitThis": false,
     "strictNullChecks": false
   },
-  "include": ["index.js", "src/**/*", "__tests__/**/*"]
+  "include": ["index.js", "src/**/*", "test/**/*.spec.ts"]
 }

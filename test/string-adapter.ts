@@ -1,3 +1,5 @@
+import { Adapter } from "../src/dom/adapter/adapter.js";
+
 const htmlstring = fragment => `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +12,7 @@ const htmlstring = fragment => `<!DOCTYPE html>
 </body>
 </html>`;
 
-const HTMLStringAdapter = fragment => {
+const HTMLStringAdapter = (fragment: string): Adapter => {
   return {
     getContents() {
       return htmlstring(fragment);

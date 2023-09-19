@@ -1,19 +1,21 @@
+import { Adapter, DomAdapter } from './adapter.js';
+
+
 import jsdom from 'jsdom';
 const { JSDOM } = jsdom;
 
 
-import FileAdapter from './file-adapter.js';
 import JSDOMNode from './jsdom-node.js';
 
 
 
-const JSDOMAdapter = adapter => {
+const JSDOMAdapter = (adapter: Adapter): DomAdapter => {
   const contents = adapter.getContents();;
   const dom = new JSDOM(contents, { includeNodeLocations: true });
   const doc = dom.window.document;
 
   return {
-    get contents() {
+    getContents() {
       return contents;
     },
 
@@ -25,7 +27,7 @@ const JSDOMAdapter = adapter => {
       let nodes = doc.querySelectorAll('body ' + selector);
 
       return Array.from(nodes).map(node => {
-        return JSDOMNode(dom, node);
+        return JSDOMNode(dom, node as HTMLElement);
       });
     },
 
@@ -42,7 +44,7 @@ const JSDOMAdapter = adapter => {
       div.innerHTML = htmlString.trim();
 
       // Change this to div.childNodes to support multiple top-level nodes.
-      return JSDOMNode(dom, div.firstChild);
+      return JSDOMNode(dom, div.firstChild as HTMLElement);
     }
   }
 }

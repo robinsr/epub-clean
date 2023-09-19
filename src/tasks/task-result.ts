@@ -1,4 +1,7 @@
-const TaskResult = () => {
+import { AccessNode } from "../dom/adapter/node.js";
+import { TransformTaskResult, TransformTaskResultsBuilder } from "./transform-task.js";
+
+const TaskResult = (): TransformTaskResultsBuilder => {
   let _remove = [];
   let _replace = [];
   let _html = null;
@@ -10,7 +13,7 @@ const TaskResult = () => {
       return this;
     },
 
-    replace(oldNode, newNode) {
+    replace(oldNode: AccessNode, newNode: AccessNode): TransformTaskResultsBuilder {
       _replace.push([oldNode, newNode]);
       return this;
     },
@@ -22,17 +25,12 @@ const TaskResult = () => {
 
     error(err) {
       _error = err;
-      return this;
-    },
-
-    get noChange() {
-      return empty(_remove) && empty(_replace) && 
-      empty(_html) && empty(_error);
+      return this.final();
     },
 
     final() {
       return {
-        noChange: this.noChange,
+        noChange: empty(_remove) && empty(_replace) && empty(_html) && empty(_error),
         remove: _remove,
         replace: _replace,
         html: _html,
@@ -42,15 +40,20 @@ const TaskResult = () => {
   }
 }
 
-const empty = arr => {
+const empty = (arr: string | Array<any>): boolean => {
   if (arr === null) return true;
   if (typeof arr === 'string' && arr === '') return true
   if (Array.isArray(arr) && arr.length === 0) return true;
   return false;
 }
 
-const result = (opts = {}) => {
+const result = (): TransformTaskResultsBuilder =>  {
   return TaskResult();
 }
+
+export const error = (err: string): TransformTaskResult => {
+  return TaskResult().error(err);
+}
+
 
 export default result;

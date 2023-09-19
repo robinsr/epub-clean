@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
+import { Adapter } from './adapter.js';
 
 
-const FileAdapter = (filename) => {
+const FileAdapter = (filename: string): Adapter => {
   return {
     getContents() {
       if (!filename) {

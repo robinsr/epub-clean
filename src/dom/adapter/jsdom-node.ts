@@ -1,6 +1,6 @@
 import ShortUniqueId from 'short-unique-id';
 
-import Tag, { TagNode } from '../tag.js';
+import Tag from '../tag.js';
 import { debug, error } from '../../log.js';
 import { AccessNode, DomNode, NODE_TYPES } from './node.js';
 

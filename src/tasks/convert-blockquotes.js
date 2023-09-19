@@ -30,7 +30,7 @@ const convert_blockquotes = {
   ${ src ? `<figcaption>${src}</figcaption>` : '' }
 </figure>`
 
-    return results.replace(node, createEl($, tmpl)).final();
+    //return results.replace(node, createEl($, tmpl)).final();
   }
 }
 

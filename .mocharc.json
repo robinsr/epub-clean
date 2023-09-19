@@ -1,0 +1,12 @@
+{
+  //"require": "ts-node/register",
+  // Specify "loader" for native ESM
+  "loader": "ts-node/esm",
+  "extension": ["ts"],
+  "spec": [
+    "test/**/*.spec.ts"
+  ],
+  "watch-files": [
+
+  ]
+}
