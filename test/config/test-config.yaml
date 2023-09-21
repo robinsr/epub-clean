@@ -1,0 +1,55 @@
+---
+- name: TitleCase text in <h3> and <h4>
+  task: change-case
+  selector: h2, .h2, h3, .h3, h4, .h4, h5, .h5a, .h5b
+  case: title-case
+- name: Convert heading classes to heading elements
+  task: map-elements
+  selector: p[class^="h"]
+  map:
+    p.h2: h2
+    p.h3: h3|all
+    p.h4: h4|other
+    p.h5a, p.h5b: h5|other
+- name: Map span.small to <small>
+  task: map-elements
+  selector: span.small
+  map:
+    span.small: small
+- name: Remove calibre classes
+  task: amend-attrs
+  selector: '[class^="calibre"]'
+  attrs:
+  - op: regex
+    attribute: class
+    value:
+    - "\\s?calibre[\\d]\\s?"
+    - ''
+- name: X - TODO - Alternate remove calibre classes
+  task: map-elements
+  selector: '[class^="calibre"]'
+  map:
+    p: p|other
+- name: Add epub:type to body
+  task: amend-attrs
+  selector: ''
+  attrs:
+  - op: add
+    attribute: epub:type
+    value: bodymatter
+- name: Remove inline styles
+  task: amend-attrs
+  selector: "[style]"
+  attrs:
+  - op: remove
+    attribute: style
+- name: Remove extra <span>
+  task: remove-elements
+  selector: span:not([class]):not([id])
+  keep-content: true
+- name: X - TODO - Group list items
+  task: group-elements
+  selector: p.ul-li
+  args:
+  - wrapper: ul.new-list
+    keep-class: false

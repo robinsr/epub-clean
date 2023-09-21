@@ -1,4 +1,4 @@
-import { Adapter, DomAdapter } from './adapter.js';
+import { Adapter, DomAdapter } from './../dom.js';
 
 
 import jsdom from 'jsdom';

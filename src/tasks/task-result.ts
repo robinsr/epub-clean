@@ -1,5 +1,5 @@
-import { AccessNode } from "../dom/adapter/node.js";
-import { TransformTaskResult, TransformTaskResultsBuilder } from "./transform-task.js";
+import { AccessNode } from "../dom/index.js";
+import { TransformTaskResult, TransformTaskResultsBuilder } from "./tasks.js";
 
 const TaskResult = (): TransformTaskResultsBuilder => {
   let _remove = [];

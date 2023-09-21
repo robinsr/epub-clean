@@ -14,7 +14,7 @@ const getTask = (name, selector, args) => ({
 })
 
 const setupTest = (taskConfig, fragment) => {
-  let { selector, parse, transform } = mapElements(taskConfig);
+  let { selector, parse, transform } = mapElements.configure(taskConfig);
   let parsed = parse(taskConfig);
   let adapter = JSDOMAdapter(StringAdapter(fragment));
   let nodes = adapter.query(selector);
@@ -30,7 +30,8 @@ describe('MapElements', function () {
       'This task does not computed',
       'p.awesome-text',
       {
-        'img.awesome-image': 'div.image-removed'
+        'img.awesome-image': 'div.image-removed',
+        'small': 'what|does|this|do?'
       });
 
     let fragment = `<div id="test-fragment">

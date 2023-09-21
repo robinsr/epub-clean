@@ -1,18 +1,31 @@
+import { ParsedSelectorString } from './dom.js';
+
+import jsdom from 'jsdom';
+const { JSDOM } = jsdom;
+
+const htmlstring = fragment => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  ${fragment}
+</body>
+</html>`;
+
+const validatorDoc = new JSDOM(htmlstring(''), { includeNodeLocations: true });
 
 
-export type CSSSelectorString = string;
-export type CSSClassName = string;
-export type CSSNamespace = string;
-export type TagName = string;
+export const isValidSelector = (selector: string): boolean => {
+  try {
+    validatorDoc.window.document.querySelector(removeNamespaces(selector));
+  } catch (err) {
+    return false;
+  }
 
-
-export interface ParsedSelectorString {
-  selector: string;
-  tag: TagName;
-  classList: Array<CSSClassName>;
-  namespaces: Array<CSSNamespace>;
-  preserveAll: boolean;
-  preserveOther: boolean;
+  return true;
 }
 
 

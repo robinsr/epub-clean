@@ -1,37 +1,55 @@
-import { validate_task } from './task-utils.js'
+import { debug } from '../log.js';
+import {
+  TransformTaskResult,
+  TransformFunction,
+  TransformTaskType,
+  MapElementsArgs,
+  MapElementsConfig
+} from './tasks.js';
+import {
+  validateSchema,
+  //validators,
+  taskSchema
+} from './task-config.js'
 import result from './task-result.js';
-import { 
+import {
   parseSelector,
   removeNamespaces
-} from '../dom/selector.js';
-import { debug } from '../log.js';
-import { TransformTaskArgs, TransformTask, TransformTaskResult, TransformFunction } from './transform-task.js';
-import { CSSSelectorString, ParsedSelectorString } from '../dom/selector.js';
+} from '../dom/index.js';
 
-
-interface MapElementsInputArgs extends TransformTaskArgs {
-  map: {
-    [key: CSSSelectorString]: string
-  }
+const argsSchema = {
+  // map: {
+  //   type: Object,
+  //   required: true
+  // }
 }
 
-interface MapElementsConfig extends TransformTaskArgs {
-  mapKeys: Array<CSSSelectorString>
-  map: {
-    [key: CSSSelectorString]: {
-      from: ParsedSelectorString, to: ParsedSelectorString
-    } 
-  }
+const mapSchema = {
+  // mapKeys: {
+  //   type: Array,
+  //   each: {
+  //     use: validators.string().selector
+  //   }
+  // },
+  // mapValues: {
+  //   type: Array,
+  //   each: {
+  //     use: validators.selector
+  //   }
+  // }
 }
 
-const filter = () => true;
+const validate = (args: MapElementsArgs): boolean => {
+  validateSchema({ ...taskSchema, ...argsSchema }, args);
+  validateSchema(mapSchema, { 
+    mapKeys: Object.keys(args.map),
+    mapValues: Object.values(args.map)
+  });
 
-const validate = (args: MapElementsInputArgs): boolean => {
-  validate_task(args, ['object']);
   return true;
 }
 
-const parse = (args: MapElementsInputArgs): MapElementsConfig => {
+const parse = (args: MapElementsArgs): MapElementsConfig => {
   let mapKeys = Object.keys(args.map).map(removeNamespaces);
   let map = mapKeys.reduce((accumulator, key) => ({
       ...accumulator, [key]: {
@@ -85,22 +103,12 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
 }
 
 
-/**
- * Converts elements from one type to another
- *
- * Basic: p.h3 -> h3
- *    <p class="h3 extra"> -> <h3>
- * Add class: p.h3 -> h3.c1.c2
- *    <p class="h3 extra"> -> <h3 class="c1 c2">
- * Preserve all class: p.h3 -> h3.newCls|all
- *    <p class="h3 extra"> -> <h3 class="h3 extra c1 c2">
- * Preserve non-matching classes: p.h3 -> h3.newCls|other
- *    <p class="h3 extra"> -> <h3 class="extra c1 c2">
- */
-const map_elements = (config: TransformTaskArgs): TransformTask<MapElementsInputArgs, MapElementsConfig> => {
-  let { name, selector } = config;
-
-  return { name, selector, filter, validate, parse, transform }
+const MapElements: TransformTaskType<MapElementsArgs, MapElementsConfig> = {
+  type: 'map-elements',
+  configure: (config) => {
+    let { name, selector } = config;
+    return { name, selector, parse, transform, validate }
+  }
 }
 
-export default map_elements;
+export default MapElements;

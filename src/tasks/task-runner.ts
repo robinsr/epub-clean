@@ -1,12 +1,12 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import path from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
+import { DomAdapter } from '../dom/index.js';
+import { diffChars, diffLines, error, info, warn } from '../log.js';
+import getTask from './index.js';
 
-import getTask from '../tasks.js';
-import { debug, diffChars, diffLines, error, info, warn } from '../log.js';
 
 
-
-const getConfig = filename => {
+const getConfig = (filename: string): ConfigFile  => {
   if (!existsSync(filename)) {
     throw new Error('Config file not found');
   }
@@ -15,43 +15,47 @@ const getConfig = filename => {
 }
 
 
-const parseTaskConfig = conf => {
-  if (!conf || !conf.task || !conf.name) {
-    throw new Error('Invalid task:', conf);
-  }
+const parseTaskConfig = (args: TaskArgs): ParsedTask<any> => {
+  let task = getTask(args.task).configure(args);
+  task.validate(args);
+  let config = task.parse(args);
 
-  let task = getTask(conf.task);
 
-  if (!task) {
-    throw new Error('Invalid task name:', conf.task);
-  }
-
-  return task(conf);
+  return { ...task, config, targets: [] };
 }
 
 
-const taskExcludeFilter = task => {
+const taskExcludeFilter = (task: TaskDefinition<any>): boolean => {
   return !task.name.startsWith('X');
 }
 
 
-const queryTargetsForTask = (task, adapter) => {
-  let { name, selector, transform } = task;
+const queryTargetsForTask = (task: ParsedTask<any>, adapter: DomAdapter) => {
+  let { name, selector, filter } = task;
 
   let nodes = adapter.query(selector);
 
-  info(`Task: [${name}] (${selector}) target count: ${nodes.length}`)
+  info(`Task: [${name}] (${selector}) target count: ${nodes.length}`);
 
   task.targets = nodes.map(node => ({
-    node, include: task.filter(node)
+    node, include: filter ? filter(node) : true
   }))
   .map(target => {
-    global.__opts.targsts && info(' - ', target.node.tagSummary[target.include ? 'green' : 'red']);
+    global.__opts.targets && info(' - ', target.node.tagSummary[target.include ? 'green' : 'red']);
     return target;
   })
   .filter(target => target.include);
 
   return task;
+}
+
+const taskLogger = (t: ParsedTask<any>) => {
+  let { name, selector, targets } = t;
+  return { 
+    name,
+    selector,
+    targets: targets.map(t => t.node.tagSummary)
+  }
 }
 
 
@@ -63,21 +67,14 @@ const TaskRunner = (adapter, opts) => {
   .map(task => queryTargetsForTask(task, adapter))
   .filter(task => task.targets.length > 0);
 
-  global.__opts.targets && info('Resolved tasks:', tasks.map(t => {
-    let { name, selector, targets } = t;
-    return { 
-      name,
-      selector,
-      targets: targets.map(t => t.node.tagSummary)
-    }
-  }));
+  global.__opts.targets && info('Resolved tasks:', tasks.map(taskLogger));
 
   tasks.forEach(task => {
     info(`Starting task: "${task.name}"`);
   
     task.targets.forEach(target => {
       let { node } = target;
-      let result = task.transform(target.node, adapter);
+      let result = task.transform(task.config, target.node, adapter);
 
       if (result.error) {
         error(result.error);
@@ -104,8 +101,8 @@ const TaskRunner = (adapter, opts) => {
       }
 
       if (result.html) {
-        diffLines(node.outer, result.html.outer, `${task.name} #${node.id} INNER-HTML`);
-        node.inner = result.html.inner;
+        diffLines(node.outer, result.html, `${task.name} #${node.id} INNER-HTML`);
+        node.inner = result.html;
       }
     });
   });

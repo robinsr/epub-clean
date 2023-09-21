@@ -2,7 +2,8 @@ import ShortUniqueId from 'short-unique-id';
 
 import Tag from '../tag.js';
 import { debug, error } from '../../log.js';
-import { AccessNode, DomNode, NODE_TYPES } from './node.js';
+import { NODE_TYPES } from './node.js';
+import { AccessNode, DomNode } from '../dom.js';
 
 import jsdom from 'jsdom';
 
@@ -131,9 +132,9 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
       return NODE_TYPES[_node.nodeType] === 'TEXT';
     },
 
-    // get attrs() {
-    //   return _node.getAttributes();
-    // },
+    hasAttr(attribute) {
+      return _node.hasAttribute(attribute);
+    },
 
     getAttr(attribute) {
       return _node.getAttribute(attribute);

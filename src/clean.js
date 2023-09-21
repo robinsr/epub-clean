@@ -3,10 +3,9 @@ import path from 'path';
 import jsdom from 'jsdom';
 const { JSDOM } = jsdom;
 
-import FileAdapter from './dom/adapter/file-adapter.js';
-import JSDOMAdapter from './dom/adapter/jsdom-adapter.js';
+import FileAdapter from './dom/adapter/file-adapter.ts';
+import JSDOMAdapter from './dom/adapter/jsdom-adapter.ts';
 import TaskRunner from './tasks/task-runner.js';
-import getTask from './tasks.js';
 import { log, diffChars, diffLines } from './log.js';
 
 

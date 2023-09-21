@@ -1,10 +1,4 @@
-import { DomNode } from "./adapter/node.js";
-
-export interface TagNode {
-  get selectors(): string[];
-  get selector(): string;
-  get tagSummary(): string;
-}
+import { DomNode, TagNode } from "./dom.js";
 
 
 const Tag = (node: DomNode, location: string): TagNode => {

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
-import { Adapter } from './adapter.js';
+import { Adapter } from './../dom.js';
 
 
 const FileAdapter = (filename: string): Adapter => {
