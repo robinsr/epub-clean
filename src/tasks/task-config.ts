@@ -1,113 +1,66 @@
-import { isString, isBoolean, isNonNull, isEmpty } from "remeda";
 import { isValidSelector } from '../dom/index.js';
-import { info, warn } from "../log.js";
+import { debug, info, warn } from "../log.js";
 
+import Joi, { ObjectSchema } from 'joi';
 
-type ParameterReqs<T> = {
-  type: string;
-  ident: (value: any) => boolean;
-  required: boolean;
-  match?: RegExp;
-  enum?: Array<T>;
-  use?: (value: T) => boolean;
-}
-
-type ParameterReqsFunc<T> = (...args: any[]) => ParameterReqs<T>
-
-interface StringValidators {
-  any: ParameterReqs<string>;
-  match: ParameterReqsFunc<string>;
-  enum: ParameterReqsFunc<string>;
-  selector: ParameterReqs<string>;
-}
-
-interface BoolValidators {
-  any: ParameterReqs<boolean>
-}
-
-type Schema = {
-  //[key: string]: Schema | Schema[] | ParameterReqs<any>; //TODO, make nestable
-  [key: string]: ParameterReqs<any>;
-}
-
-
-const getBoolValidators = (required: boolean = true): BoolValidators => {
-  const common = { type: 'boolean', ident: isBoolean, required };
+const custom = Joi.extend((joi) => {
   return {
-    any: { ...common }
-  }
-}
-
-const getStringValidators = (required: boolean = true): StringValidators => {
-  const common = { type: 'string', ident: isString, required };
-  return {
-    any: { ...common },
-    match: (match: string = '.*') => ({
-      ...common, match: new RegExp(match)
-    }),
-    enum: (...values: Array<string>) => ({
-      ...common, enum: values
-    }),
-    selector: {
-      ...common, use: isValidSelector
-    }
-  }
-}
-
-export const validators = {
-  bool: getBoolValidators,
-  string: getStringValidators
-}
-
-const validateParameter = (reqs: ParameterReqs<any>, path: string, val: any): string => {
-  let { type, required, ident } = reqs;
-
-  info(reqs, path, val);
-
-  if (isEmpty(val)) {
-    return required ? `Missing required parameter "${path}"` : null;
-  }
-
-  if (!ident(val)) {
-    return `"${path}" is not of type "${type}"`;
-  }
-
-  if (reqs.enum) {
-    return reqs.enum.includes(val) ? null : `"${path}" is not an allowed value`;
-  }
-
-  else if (reqs.match) {
-    return reqs.match.test(val) ? null : `"${path}" does not match pattern "${reqs.match.source}"`;
-  }
-
-  else if (reqs.use) {
-    return reqs.use(val) ? null : `"${path}" is invalid`;
-  }
-
-  return null;
-}
-
-
-export const validateSchema = (schema: Schema, args: object, label: string = "Unknown"): boolean => {
-  info(typeof schema, schema, args);
-  
-  let schemamap = new Map(Object.entries(schema));
-
-  let errors = Object.entries(args).map(([key, val]) => {
-    if (schemamap.has(key)) {
-      info(`Validating param "${key}" of value "${val}"`);
-      info ('Using schema:', schemamap.get(key));
-      return validateParameter(schemamap.get(key), key, val);
-    } else {
+    type: 'selector',
+    base: joi.string(),
+    messages: {
+      'selector.invalid': '"{{#label}}" is an invalid CSS selector'
+    },
+    validate(value, helpers) {
+      if (!isValidSelector(value)){
+        return { value, errors: helpers.error('selector.invalid') }
+      }
       return null;
     }
-  })
-  .filter(isNonNull)
+  }
+});
+
+export const taskSchema = Joi.object({
+  name: Joi.string().required(),
+  selector: custom.selector(),
+  task: Joi.string().allow(
+    'amend-attrs', 'change-case', 'group-elements', 
+    'map-elements','remove-elements'
+  )
+});
 
 
-  if (errors) {
+export const validators = {
+  any: () => Joi.any(),
+  req: () => Joi.required(),
+  forbid: () => Joi.any().forbidden(),
+  bool: () => ({
+    any: () => Joi.boolean().required()
+  }),
+  string: () => ({
+    any: () => Joi.string().required(),
+    req: () => Joi.string().required(),
+    opt: () => Joi.string(),
+    arr: (l: number) => Joi.array().length(l)
+  }),
+  oneOf: (...values) => Joi.any().allow(...values).required(),
+  selector: () => custom.selector().required(),
+  object: (...args: any[]) => Joi.object(...args),
+  array: () => Joi.array()
+}
+
+
+export const validateSchema = (schema: ObjectSchema, args: object, label: string = "Unknown"): boolean => {
+  
+  info(schema.describe());
+  debug(JSON.stringify(schema.describe(), null, 4));
+  info(args);
+
+  let { error } = schema.validate(args);
+
+
+  if (error) {
     warn(`Validation errors (${label}):`);
-    errors.forEach(err => warn(`\t → ${err}`));
+    warn(error);
     //throw new Error('Stopping on validation error')
     return true;
   } else {
@@ -115,11 +68,3 @@ export const validateSchema = (schema: Schema, args: object, label: string = "Un
   }
 }
 
-export const taskSchema = {
-  name: validators.string().any,
-  selector: validators.string().selector,
-  task: validators.string().enum(
-    'amend-attrs', 'change-case', 'group-elements', 
-    'map-elements','remove-elements'
-  )
-}

@@ -10,6 +10,7 @@ import {
   VoidDomFunction
 } from "./tasks.js";
 
+const TASK_NAME = 'change-case';
 
 const toTitleCase = (n: DomNode) => {
   n.text = n.text.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
@@ -30,11 +31,11 @@ const transformMap: Record<string, VoidDomFunction> = {
 }
 
 const changeCaseSchema = {
-  case: validators.string().enum(...Object.keys(transformMap))
-}
+  case: validators.oneOf(...Object.keys(transformMap))
+};
 
 const validate = (args: ChangeCaseArgs): boolean => {
-  return validateSchema({ ...taskSchema, ...changeCaseSchema  }, args);
+  return validateSchema(taskSchema.append(changeCaseSchema), args, TASK_NAME);
 }
 
 const parse = (args: ChangeCaseArgs): VoidDomFunction => {
@@ -63,7 +64,7 @@ const transform: TransformFunction<VoidDomFunction> = (textFunc, node): Transfor
 }
 
 const ChangeCase: TransformTaskType<ChangeCaseArgs, VoidDomFunction> = {
-  type: 'change-case',
+  type: TASK_NAME,
   configure: (config) => {
     let { name, selector } = config;
     return { name, selector, validate, parse, transform };

@@ -1,6 +1,6 @@
 import { error } from '../log.js';
 import { AccessNode } from '../dom/index.js';
-import { validators, validateSchema } from './task-config.js'
+import { validators, validateSchema, taskSchema } from './task-config.js'
 import result from './task-result.js';
 import { 
   AmendAttrArgs,
@@ -9,20 +9,35 @@ import {
   TransformTaskType
 } from './tasks.js';
 
+const TASK_NAME = 'amend-attrs';
+
+const { array, forbid, object, oneOf, req, string } = validators;
+
+
+const attributeSchema = object({
+  attr: string().req(),
+  op: oneOf('add', 'remove', 'replace', 'regex'),
+  value: string().opt()
+    .when('op', [
+      { is: 'add', then: req() },
+      { is: 'replace', then: req() },
+      { is: 'remove', then: forbid() },
+      { is: 'regex', then: forbid() }
+  ]),
+  values: array().length(2).items(string().req().allow(''))
+    .when('op', { is: 'regex', then: req(), otherwise: forbid() })
+  })
+  .rename('attribute', 'attr')
 
 const schema = {
-  //attrs: [ {
-    attr: validators.string().any,
-    op: validators.string().enum('add', 'remove', 'replace', 'regex'),
-    value: validators.string().any
-  //} ]
+  attrs: array().items(attributeSchema)
 };
 
 const configure = (config): TaskDefinition<AmendAttrArgs> => ({
   name: config.name,
   selector: config.selector,
   validate: (args) => {
-    return validateSchema(schema, args);
+    return validateSchema(taskSchema.append(schema), args, TASK_NAME);
   },
   parse: (args) => args,
   transform: (config, node) => {
@@ -75,7 +90,7 @@ const configure = (config): TaskDefinition<AmendAttrArgs> => ({
 });
 
 const AmendAttrs: TransformTaskType<AmendAttrArgs> = {
-  type: 'amend-attrs',
+  type: TASK_NAME,
   configure
 }
 

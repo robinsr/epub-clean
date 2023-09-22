@@ -8,7 +8,7 @@ import {
 } from './tasks.js';
 import {
   validateSchema,
-  //validators,
+  validators,
   taskSchema
 } from './task-config.js'
 import result from './task-result.js';
@@ -17,34 +17,25 @@ import {
   removeNamespaces
 } from '../dom/index.js';
 
+const TASK_NAME = 'map-elements';
+
+let { array, object, selector } = validators;
+
 const argsSchema = {
-  // map: {
-  //   type: Object,
-  //   required: true
-  // }
+  map: object().unknown()
 }
 
-const mapSchema = {
-  // mapKeys: {
-  //   type: Array,
-  //   each: {
-  //     use: validators.string().selector
-  //   }
-  // },
-  // mapValues: {
-  //   type: Array,
-  //   each: {
-  //     use: validators.selector
-  //   }
-  // }
-}
+const mapSchema = object({
+  mapKeys: array().items(selector()),
+  mapValues: array().items(selector())
+});
 
 const validate = (args: MapElementsArgs): boolean => {
-  validateSchema({ ...taskSchema, ...argsSchema }, args);
+  validateSchema(taskSchema.append(argsSchema), args, TASK_NAME);
   validateSchema(mapSchema, { 
     mapKeys: Object.keys(args.map),
     mapValues: Object.values(args.map)
-  });
+  }, TASK_NAME);
 
   return true;
 }
@@ -104,7 +95,7 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
 
 
 const MapElements: TransformTaskType<MapElementsArgs, MapElementsConfig> = {
-  type: 'map-elements',
+  type: TASK_NAME,
   configure: (config) => {
     let { name, selector } = config;
     return { name, selector, parse, transform, validate }
