@@ -65,7 +65,7 @@ export interface TransformTaskType<A extends CommonTaskArgs, C = A> {
 export interface TaskDefinition<A, C = A> {
   name: string;
   selector: CSSSelectorString;
-  validate(args: A): boolean,
+  validate(args: A): ValidationResult | null,
   parse(args: A): C;
   filter?: (node: AccessNode) => boolean;
   transform: TransformFunction<C>;
@@ -76,9 +76,18 @@ export interface TaskTarget {
   include: boolean;
 }
 
+interface ValidationResult {
+  [key: string]: {
+    problem: string;
+    message: string;
+    value: any;
+  }
+}
+
 export interface ParsedTask<C> extends TaskDefinition<any, C> {
-  config: C;
-  targets: Array<TaskTarget>
+  config?: C;
+  targets?: Array<TaskTarget>
+  errors?: ValidationResult
 }
 
 export interface TransformFunction<C> {

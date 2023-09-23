@@ -1,33 +1,48 @@
+import { ValidationResult } from "./tasks.js";
 import { isValidSelector } from '../dom/index.js';
 import { debug, info, warn } from "../log.js";
 
 import Joi, { ObjectSchema } from 'joi';
 
-const custom = Joi.extend((joi) => {
+const JOI_OPTS = {
+  abortEarly: false,
+  wrap: { label: false }
+}
+
+const selectorMsgs = {
+  from: `Invalid CSS selector in mapping: [\u2B95 {#key} \u2B05 : {#value} ]`,
+  to: 'Invalid CSS selector in mapping: [ {#key} : \u2B95 {#value} \u2B05 ]'
+};
+
+const customJoi = Joi.extend((joi) => {
   return {
     type: 'selector',
     base: joi.string(),
     messages: {
-      'selector.invalid': '"{{#label}}" is an invalid CSS selector'
+      //'selector.invalid': '({$forTask}) param {#label} {:#value} is not a valid CSS selector'
+      //'selector.invalid': 'param {#label} {:#value} is not a valid CSS selector'
     },
     validate(value, helpers) {
       if (!isValidSelector(value)){
         return { value, errors: helpers.error('selector.invalid') }
       }
+
       return null;
     }
   }
 });
 
-export const taskSchema = Joi.object({
-  name: Joi.string().required(),
-  selector: custom.selector(),
-  task: Joi.string().allow(
-    'amend-attrs', 'change-case', 'group-elements', 
-    'map-elements','remove-elements'
-  )
-});
 
+
+const elementMap = () => Joi.object({})
+        .pattern(
+          customJoi.selector(),
+          customJoi.selector())
+        // default object.unknown message is -> "XYZ" is not allowed;
+        .messages({
+          'object.unknown': selectorMsgs.from,
+          'selector.invalid': selectorMsgs.to
+        })
 
 export const validators = {
   any: () => Joi.any(),
@@ -42,29 +57,49 @@ export const validators = {
     opt: () => Joi.string(),
     arr: (l: number) => Joi.array().length(l)
   }),
-  oneOf: (...values) => Joi.any().allow(...values).required(),
-  selector: () => custom.selector().required(),
+  oneOf: (...values) => Joi.any().valid(...values).required(),
+  selector: () => customJoi.selector().required(),
+  elementMap: elementMap,
   object: (...args: any[]) => Joi.object(...args),
   array: () => Joi.array()
 }
 
+export const taskSchema = Joi.object({
+  name: Joi.string().required().label('Task Name').note('this is special', 'this is important'),
+  selector: customJoi.selector(),
+  task: Joi.any().valid(
+    'amend-attrs', 'change-case', 'group-elements',
+    'map-elements','remove-elements'
+  ).required()
+});
 
-export const validateSchema = (schema: ObjectSchema, args: object, label: string = "Unknown"): boolean => {
-  
-  info(schema.describe());
+export const validateSchema = (
+  schema: ObjectSchema,
+  args: object,
+  label: string = "Unknown"
+): ValidationResult | null => {
   debug(JSON.stringify(schema.describe(), null, 4));
-  info(args);
 
-  let { error } = schema.validate(args);
+  let opts = {
+  //  context: { forTask: label }
+  };
 
+  let { error } = schema.validate(args, { ...JOI_OPTS, ...opts });
 
-  if (error) {
-    warn(`Validation errors (${label}):`);
-    warn(error);
-    //throw new Error('Stopping on validation error')
-    return true;
-  } else {
-    return false;
+  if (!error) {
+    return null;
   }
+
+  warn(`Validation errors (${label}):`);
+
+  let addLabel = str => `(${label}) ${str};`
+
+  return error.details
+    .map(err =>  ({ ...err, message: addLabel(err.message) }))
+    .reduce((acc, { message, type: problem, context }) => {
+      //console.log(message, problem, context)
+      let { key, value } = context;
+      return { ...acc, [key]: { problem, value, message } }
+  }, {});
 }
 

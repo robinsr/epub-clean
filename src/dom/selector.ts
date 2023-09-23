@@ -28,12 +28,9 @@ export const isValidSelector = (selector: string): boolean => {
   return true;
 }
 
-
 /**
- * Accepts a string mapping rule (eg "h5.newCls.*")
+ * Accepts a string mapping rule (eg "h5.newCls|all")
  * and returns an object of its properties
- *
- * TODO: Replaces this with CSS selector parse library
  */
 export const parseSelector = (selector: string): ParsedSelectorString => {
   let namespaces = getNamespaces(selector);
@@ -46,7 +43,6 @@ export const parseSelector = (selector: string): ParsedSelectorString => {
   return { selector, tag, classList, namespaces, preserveAll, preserveOther }
 }
 
-
 /**
  * Removes namespace part of CSS selector string
  */
@@ -56,8 +52,6 @@ export const removeNamespaces = (sel: string): string => {
 
 /**
  * Returns array of namespaces in a CSS selector string
- * @param  {[type]} sel [description]
- * @return {[type]}     [description]
  */
 export const getNamespaces = (sel: string): Array<string> => {
   return sel.split('|').slice(1);

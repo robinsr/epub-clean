@@ -3,11 +3,7 @@ import JSDOMAdapter from '../../src/dom/adapter/jsdom-adapter.js';
 import mapElements from '../../src/tasks/map-elements.js';
 
 import { expect } from 'chai';
-import { describe } from 'node:test';
 
-// const props = (obj) => {
-//   console.log(Object.getOwnPropertyNames(obj));
-// }
 
 const getTask = (name, selector, args) => ({
   name, selector, task: 'map-elements', map: args
@@ -23,7 +19,8 @@ const setupTest = (taskConfig, fragment) => {
   return { adapter, nodes, results };
 }
 
-describe('MapElements', function () {
+
+describe('Tasks#MapElements', function () {
 
   describe('it returns an error for mismatched args', function() {
     let taskConfig = getTask(

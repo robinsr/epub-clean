@@ -3,7 +3,7 @@ import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
 import { DomAdapter } from '../dom/index.js';
 import { diffChars, diffLines, error, info, warn } from '../log.js';
 import getTask from './index.js';
-
+import { isEmpty } from 'remeda';
 
 
 const getConfig = (filename: string): ConfigFile  => {
@@ -17,16 +17,15 @@ const getConfig = (filename: string): ConfigFile  => {
 
 const parseTaskConfig = (args: TaskArgs): ParsedTask<any> => {
   let task = getTask(args.task).configure(args);
-  task.validate(args);
+  let errors = task.validate(args);
+
+  if (errors) {
+    return { ...task, errors, config: {}, targets: [] };
+  }
+
   let config = task.parse(args);
 
-
   return { ...task, config, targets: [] };
-}
-
-
-const taskExcludeFilter = (task: TaskDefinition<any>): boolean => {
-  return !task.name.startsWith('X');
 }
 
 
@@ -40,13 +39,18 @@ const queryTargetsForTask = (task: ParsedTask<any>, adapter: DomAdapter) => {
   task.targets = nodes.map(node => ({
     node, include: filter ? filter(node) : true
   }))
-  .map(target => {
-    global.__opts.targets && info(' - ', target.node.tagSummary[target.include ? 'green' : 'red']);
-    return target;
-  })
-  .filter(target => target.include);
+      .map(target => {
+        global.__opts.targets && info(' - ', target.node.tagSummary[target.include ? 'green' : 'red']);
+        return target;
+      })
+      .filter(target => target.include);
 
   return task;
+}
+
+
+const taskExcludeFilter = (task: TaskDefinition<any>): boolean => {
+  return !task.name.startsWith('X');
 }
 
 const taskLogger = (t: ParsedTask<any>) => {
@@ -62,10 +66,25 @@ const taskLogger = (t: ParsedTask<any>) => {
 const TaskRunner = (adapter, opts) => {
   const config = getConfig(opts.config);
   
-  const tasks = config.map(parseTaskConfig)
-  .filter(taskExcludeFilter)
-  .map(task => queryTargetsForTask(task, adapter))
-  .filter(task => task.targets.length > 0);
+  let tasks = config.map(parseTaskConfig)
+
+  let errors = tasks.reduce((acc, task) => {
+      if (task.errors) {
+        let errs = Object.values(task.errors).map(e => e.message)
+        return [...acc, ...errs];
+      } else {
+        return acc;
+      }
+  }, []);
+
+  if (!isEmpty(errors)) {
+    errors.forEach(e => error(e));
+    process.exit(1);
+  }
+
+  tasks = tasks.filter(taskExcludeFilter)
+    .map(task => queryTargetsForTask(task, adapter))
+    .filter(task => task.targets.length > 0);
 
   global.__opts.targets && info('Resolved tasks:', tasks.map(taskLogger));
 

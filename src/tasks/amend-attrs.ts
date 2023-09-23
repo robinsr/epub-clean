@@ -36,9 +36,7 @@ const schema = {
 const configure = (config): TaskDefinition<AmendAttrArgs> => ({
   name: config.name,
   selector: config.selector,
-  validate: (args) => {
-    return validateSchema(taskSchema.append(schema), args, TASK_NAME);
-  },
+  validate: (args) => validateSchema(taskSchema.append(schema), args, TASK_NAME),
   parse: (args) => args,
   transform: (config, node) => {
     const applyUpdates = (node: AccessNode, args: AmendAttrOp) => {

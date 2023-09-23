@@ -2,11 +2,11 @@ import { DomNode } from '../dom/index.js';
 import { walkTree } from './task-utils.js';
 import result from './task-result.js';
 import { validators, taskSchema, validateSchema } from './task-config.js';
-import { 
+import {
   ChangeCaseArgs,
   TransformFunction,
   TransformTaskResult,
-  TransformTaskType,
+  TransformTaskType, ValidationResult,
   VoidDomFunction
 } from "./tasks.js";
 
@@ -34,7 +34,7 @@ const changeCaseSchema = {
   case: validators.oneOf(...Object.keys(transformMap))
 };
 
-const validate = (args: ChangeCaseArgs): boolean => {
+const validate = (args: ChangeCaseArgs): ValidationResult => {
   return validateSchema(taskSchema.append(changeCaseSchema), args, TASK_NAME);
 }
 

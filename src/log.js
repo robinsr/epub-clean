@@ -2,6 +2,11 @@ import callsites from 'callsites';
 import colors from 'colors';
 import { diffChars as dc, diffLines as dl } from 'diff';
 
+
+// Trying out Consola
+// Would rather use pino - https://getpino.io/#/
+import { consola } from "consola";
+
 const caller = () => {
   let caller = callsites()[2];
   let line_no = caller.getLineNumber();
@@ -13,29 +18,28 @@ const caller = () => {
 
 export const log = (...msg) => {
   let { line_no, filename, name } = caller();
-  console.log(`[INFO] (${name}:${line_no}):`.cyan, ...msg);
+  consola.info(`(${name}:${line_no}):`, ...msg);
 }
 
 export const info = (...msg) => {
   let { line_no, filename, name } = caller();
-  console.log(`[INFO] (${name}:${line_no}):`.cyan, ...msg);
+  consola.info(`(${name}:${line_no}):`, ...msg);
 }
 
 export const warn = (msg, ...rest) => {
   let { line_no, filename, name } = caller();
-  console.warn(`[WARN] (${name}:${line_no}): ${msg}`.yellow, ...rest);
+  consola.warn(`(${name}:${line_no}): ${msg}`, ...rest);
 }
 
 export const error = (msg, ...rest) => {
   let { line_no, filename, name } = caller();
-  console.warn(`[ERROR] (${name}:${line_no}): ${msg}`.red.inverse, ...rest);
+  consola.error(`(${name}:${line_no}): ${msg}`, ...rest);
   console.trace();
 }
 
 export const debug = (...msg) => {
-  return;
   let { line_no, filename, name } = caller();
-  console.debug(`[DEBUG] (${name}:${line_no}):`, ...msg);
+  consola.debug(`(${name}:${line_no}):`, ...msg);
 }
 
 

@@ -4,7 +4,8 @@ import {
   TransformFunction,
   TransformTaskType,
   MapElementsArgs,
-  MapElementsConfig
+  MapElementsConfig,
+  ValidationResult
 } from './tasks.js';
 import {
   validateSchema,
@@ -30,14 +31,15 @@ const mapSchema = object({
   mapValues: array().items(selector())
 });
 
-const validate = (args: MapElementsArgs): boolean => {
-  validateSchema(taskSchema.append(argsSchema), args, TASK_NAME);
-  validateSchema(mapSchema, { 
+const validate = (args: MapElementsArgs): ValidationResult => {
+  let errors = validateSchema(taskSchema.append(argsSchema), args, TASK_NAME);
+
+  let selectorErrors = validateSchema(mapSchema, {
     mapKeys: Object.keys(args.map),
     mapValues: Object.values(args.map)
   }, TASK_NAME);
 
-  return true;
+  return Object.assign({}, errors, selectorErrors);
 }
 
 const parse = (args: MapElementsArgs): MapElementsConfig => {

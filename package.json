@@ -19,12 +19,14 @@
     "callsites": "^4.1.0",
     "colors": "^1.4.0",
     "commander": "^11.0.0",
+    "consola": "^3.2.3",
     "diff": "^5.1.0",
     "joi": "^17.10.2",
     "jsdom": "^22.1.0",
     "remeda": "^1.27.0",
     "short-unique-id": "^5.0.2",
     "short-uuid": "^4.2.2",
+    "typescript-optional": "^3.0.0-alpha.3",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

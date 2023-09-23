@@ -8,11 +8,11 @@ const schema = {
   'keep-content': validators.bool().any()
 }
 
-const validate = (args) => {
+const validate = (args: RemoveElementsArgs) => {
   return validateSchema(taskSchema.append(schema), args, TASK_NAME);
 }
 
-const parse = (args) => args;
+const parse = (args: RemoveElementsArgs): RemoveElementsArgs => args;
 
 const transform = (config, node) => {
   if (config.content) {
