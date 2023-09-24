@@ -13,7 +13,13 @@ const format_width = 2000;
 
 const JSDOMAdapter = (adapter: Adapter): DomAdapter => {
   const contents = adapter.getContents();;
-  const dom = new JSDOM(contents, { includeNodeLocations: true });
+  const dom = new JSDOM(contents, {
+    url: 'https://example.org/',
+    referrer: 'https://example.com/',
+    contentType: 'text/html',
+    includeNodeLocations: true,
+    storageQuota: 10000000
+  });
   const doc = dom.window.document;
 
   return {
@@ -34,12 +40,17 @@ const JSDOMAdapter = (adapter: Adapter): DomAdapter => {
       });
     },
 
-    contains(node) {
-      return doc.body.contains(node.node);
+    first(selector) {
+      let node = doc.querySelector('body ' + selector);
+      return node ? JSDOMNode(dom, node as HTMLElement) : null;
     },
 
     get(id) {
       return JSDOMNode(dom, doc.querySelector(`[data-rid="${id}"]`));
+    },
+
+    contains(node) {
+      return doc.body.contains(node.node);
     },
 
     newNode(htmlString) {

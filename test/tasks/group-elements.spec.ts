@@ -1,12 +1,80 @@
 import groupElements from '../../src/tasks/group-elements.js';
-import { setupTest } from "../task-setup.js";
+import { setupTest } from "../support/task-setup.js";
 
 import { expect } from 'chai';
-import {before, describe, it} from 'mocha';
+import { before, describe, it } from 'mocha';
 
 
-describe('Tasks#GroupElements', () => {
-  describe('Converts p.list-items to a proper unordered-list', function() {
+describe('Tasks - GroupElements', function () {
+
+  describe('Validates schema', () => {
+
+    let jsonConfig = {
+      task: groupElements.type,
+      name: 'validation-test',
+      selector: 'div',
+      map: undefined,
+      wrapper: '',
+    }
+
+    it('requires non-empty for "wrapper"', function () {
+      let valid = groupElements.configure(jsonConfig).validate(jsonConfig);
+
+      expect(valid).to.have.property('wrapper');
+      expect(valid).to.have.nested.property('wrapper.problem')
+        .that.eq('string.empty');
+
+      expect(valid).to.have.nested.property('wrapper.message')
+        .that.matches(/^\(group-elements\)/);
+
+      jsonConfig.wrapper = '&&^^##^^&&';
+    });
+
+    it('requires valid css string for "wrapper"', function () {
+      let valid = groupElements.configure(jsonConfig).validate(jsonConfig);
+
+      expect(valid).to.have.property('wrapper');
+      expect(valid).to.have.nested.property('wrapper.problem')
+        .that.eq('selector.invalid');
+    });
+  });
+
+  describe('Groups adjacent elements matching the selector', function () {
+    let taskConfig = {
+      task: 'group-elements',
+      name: 'Converts p.list-items to a proper unordered-list',
+      selector: '.tx.special',
+      wrapper: 'div.special-text',
+      map: {
+        '*': '*'
+      }
+    };
+
+    let fragment = `<div id="test-fragment">
+      <p class="tx">Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      <p class="tx special">Ab culpa impedit iusto molestiae necessitatibus quaerat quod soluta veniam vitae voluptas.</p>
+      <p class="tx">Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
+    </div>`;
+
+    let doc = null
+    before(function () {
+      let { config, taskDef, nodes, adapter } = setupTest(groupElements, taskConfig, fragment);
+      this.doc = adapter;
+      console.log(adapter.body)
+    })
+
+     it('should create 2 new list elements', function () {
+      let wrapperEl = this.doc.query('div.special-text');
+      expect(wrapperEl).to.be.a('array');
+      expect(wrapperEl).to.have.length(1);
+
+      let innerEl = this.doc.query('p.tx.special');
+      expect(innerEl).to.be.a('array');
+      expect(innerEl).to.have.length(1);
+    });
+
+  });
+  describe('Maps selected elements to new types', function() {
     let taskConfig = {
       task: 'group-elements',
       name: 'Converts p.list-items to a proper unordered-list',
@@ -26,13 +94,12 @@ describe('Tasks#GroupElements', () => {
       <p class="tx dot ul1 li0">• item 1 in 2nd list</p>
       <p class="tx dot ul1 li1">• item 2 in 2nd list</p>
       <p class="tx">Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
-    </div>`
+    </div>`;
 
     let doc = null
     before(done => {
       let { config, taskDef, nodes, adapter } = setupTest(groupElements, taskConfig, fragment);
       doc = adapter;
-      console.log(adapter.body);
       done();
     })
 
@@ -134,7 +201,6 @@ describe('Tasks#GroupElements', () => {
     before(done => {
       let {config, taskDef, nodes, adapter} = setupTest(groupElements, taskConfig, fragment);
       doc = adapter;
-      console.log(adapter.body);
       done();
     })
 

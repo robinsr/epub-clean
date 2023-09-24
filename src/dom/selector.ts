@@ -1,8 +1,19 @@
+import {
+  ClassSelector,
+  CssNodePlain,
+  parse,
+  SelectorListPlain,
+  SelectorPlain,
+  toPlainObject,
+  TypeSelector,
+} from 'css-tree';
+
 import { ParsedSelectorString } from './dom.js';
 
 import jsdom from 'jsdom';
 
 import * as spec from 'specificity';
+import { isEmpty } from 'remeda';
 const { JSDOM } = jsdom;
 
 const htmlstring = fragment => `<!DOCTYPE html>
@@ -66,15 +77,75 @@ const echo = (msg: any): any => {
   return msg;
 }
 
-
 export const sortSelectors = (selectors: string[]): string[] => {
   return selectors.map(sel => ({
     val: sel,
     score: spec.calculate(removeNamespaces(sel))
   }))
     .sort((a, b) => spec.compare(a.score, b.score))
-    .map(echo)
     .map(i => i.val)
     .reverse()
 }
 
+const default_tag = (selector: string = '', tag?: string): ParsedSelectorString => ({
+  selector, tag,
+  classList: [],
+  namespaces: [],
+  preserveAll: false,
+  preserveOther: false
+});
+
+export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
+  console.log(selector);
+
+  if (isEmpty(selector)) {
+    return null;
+  }
+
+  let extractValues = (node: SelectorPlain) => {
+    let tag = null, classList = [];
+
+    if (node.children.at(0).type === 'TypeSelector') {
+      tag = (node.children.at(0) as TypeSelector).name;
+    }
+
+    classList = node.children
+      .filter(n => n.type === 'ClassSelector')
+      .map(n => (n as ClassSelector).name);
+
+    return Object.assign({}, default_tag(selector, tag), { classList });
+  }
+
+  let context = selector.match(',') ? 'selectorList' : 'selector';
+
+  try {
+    let tree = toPlainObject(parse(removeNamespaces(selector), { context }));
+    console.log(tree);
+
+    let type: string, children: CssNodePlain[], p: ParsedSelectorString;
+
+    if (context === 'selectorList') {
+      type = (tree as SelectorListPlain).type;
+      children = (tree as SelectorListPlain).children;
+      p = extractValues(children.at(0) as SelectorPlain)
+    }
+
+    else if (context === 'selector') {
+      type = (tree as SelectorPlain).type;
+      children = (tree as SelectorPlain).children;
+      p = extractValues(tree as SelectorPlain);
+      console.log(p)
+    }
+
+    console.log('type:', type)
+    console.log('children:', children);
+
+    return p;
+
+  } catch (e) {
+    if (e instanceof Error) console.error(`${e.message} "${selector}"`);
+    else console.error(`Invalid selector "${selector}"`);
+
+    return default_tag();
+  }
+}

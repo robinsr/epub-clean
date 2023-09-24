@@ -1,5 +1,13 @@
-import {AccessNode, DomAdapter, JSDOMAdapter} from "../src/dom/index.js";
-import {TaskDefinition, TransformTaskResult, TransformTaskType} from "../src/tasks/tasks.js";
+import {
+  AccessNode,
+  DomAdapter,
+  JSDOMAdapter
+} from "../../src/dom/index.js";
+import {
+  TaskDefinition,
+  TransformTaskResult,
+  TransformTaskType
+} from "../../src/tasks/tasks.js";
 
 import StringAdapter from "./string-adapter.js";
 

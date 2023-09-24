@@ -1,33 +1,57 @@
-import { ValidationResult } from "./tasks.js";
-import { isValidSelector } from '../dom/index.js';
-import { debug, info, warn } from "../log.js";
-
 import Joi, { ObjectSchema } from 'joi';
+
+import { ValidationResult } from "./tasks.js";
+import { isValidSelector, parseSelector } from '../dom/index.js';
+import { debug, info, warn } from "../log.js";
+import { parseSelectorV2 } from '../dom/selector.js';
 
 const JOI_OPTS = {
   abortEarly: false,
   wrap: { label: false }
 }
 
+const point = str =>  `\u2B95 ${str} \u2B05`;
+
 const selectorMsgs = {
-  from: `Invalid CSS selector in mapping: [\u2B95 {#key} \u2B05 : {#value} ]`,
-  to: 'Invalid CSS selector in mapping: [ {#key} : \u2B95 {#value} \u2B05 ]'
+  //'object.unknown': `Invalid CSS selector in mapping: [\u2B95 {#key} \u2B05 : {#value} ]`,
+  'object.unknown': `Invalid CSS selector in mapping: [ ${point('{#key}')} : {#value} ]`,
+  'selector.invalid': `Invalid CSS selector in mapping: [ {#key} : ${point('{#value}')} ]`,
+  'selector.needsTag': '{#label} {:#value} requires type selector'
 };
 
 const customJoi = Joi.extend((joi) => {
   return {
     type: 'selector',
     base: joi.string(),
-    messages: {
-      //'selector.invalid': '({$forTask}) param {#label} {:#value} is not a valid CSS selector'
-      //'selector.invalid': 'param {#label} {:#value} is not a valid CSS selector'
-    },
+    messages: Object.assign({}, selectorMsgs, {
+      'selector.invalid': '{#label} {:#value} is not a valid CSS selector'
+    }),
     validate(value, helpers) {
+
       if (!isValidSelector(value)){
         return { value, errors: helpers.error('selector.invalid') }
       }
 
+      if (helpers.schema.$_getFlag('required-tag')) {
+        let p = parseSelectorV2(value);
+        if (!p.tag) return { value, errors: helpers.error('selector.needsTag') };
+      }
+
       return null;
+    },
+    rules: {
+      withTag: {
+        alias: 'withElement',
+        method() {
+          return this.$_setFlag('required-tag', true);
+        }
+      },
+      simple: {
+        alias: 'noComplex',
+        method() {
+          return this.$_setFlag('only-simple', true);
+        }
+      }
     }
   }
 });
@@ -37,10 +61,7 @@ const elementMap = () => Joi.object({})
           customJoi.selector(),
           customJoi.selector())
         // default object.unknown message is -> "XYZ" is not allowed;
-        .messages({
-          'object.unknown': selectorMsgs.from,
-          'selector.invalid': selectorMsgs.to
-        })
+        .messages(selectorMsgs);
 
 export const validators = {
   any: () => Joi.any(),
@@ -63,7 +84,7 @@ export const validators = {
 }
 
 export const taskSchema = Joi.object({
-  name: Joi.string().required().label('Task Name').note('this is special', 'this is important'),
+  name: Joi.string().required().label('Task Name'),
   selector: customJoi.selector(),
   task: Joi.any().valid(
     'amend-attrs', 'change-case', 'group-elements',

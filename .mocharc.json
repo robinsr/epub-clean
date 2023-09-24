@@ -7,7 +7,7 @@
     "loader=ts-node/esm"
   ],
   "require": [
-    "test/hooks.ts"
+    "test/support/hooks.ts"
   ],
   "reporter": "spec",
   "extension": ["ts"],

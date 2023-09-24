@@ -115,7 +115,7 @@ let glueIn = (members: string[], moreglue: () => string): string => {
   return members.slice(1).reduce((i, m) => i + moreglue() + m, members[0])
 }
 
-describe('dom/selector', () => {
+describe('DOM - selector', () => {
   describe('#isValidSelector', () => {
     describe('basic', () => {
 
@@ -195,7 +195,7 @@ describe('dom/selector', () => {
   });
 
 
-  describe('getNamespaces', () => {
+  describe('#getNamespaces', () => {
     it('return any namespaces from selector strings', () => {
       let result = getNamespaces(`${css.big_selector}|${css.namespaces}`);
 
@@ -218,7 +218,7 @@ describe('dom/selector', () => {
   });
 
 
-  describe('parseSelector', () => {
+  describe('#parseSelector', () => {
     let tag = 'p';
     let classList = [ 'a-cls', 'b-cls' ];
     let selector = `${tag}.${classList.join('.')}|${css.namespaces}`
@@ -273,6 +273,7 @@ describe('dom/selector', () => {
         'p.cl1',
         'p.cl1#idA',
         'p.cl1.cl2.cl3.cl4',
+        '*',
         'p#id1 p#id2',
         'p.cl1 p#id2',
         'p',
@@ -292,14 +293,17 @@ describe('dom/selector', () => {
         'p>span~div p~h1>.some-class-name',
         'p[thing^="abc"]',
         'p.cl1',
-        'p'
+        'p',
+        '*',
       ]
 
-      let results = sortSelectors(selectors)
+      let results = sortSelectors(selectors);
 
       expected.forEach((ex, i) => {
         expect(results.at(i)).to.eq(ex);
       });
     });
+
+
   });
 });

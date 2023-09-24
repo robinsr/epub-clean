@@ -20,7 +20,8 @@ program
   .option('--targets', 'prints targets to by updated without performing updates')
   .action((filename, opts) => {
     global.__opts = opts;
-    clean(filename, opts)
+    return clean(filename, opts)
   });
+
 
 program.parse();

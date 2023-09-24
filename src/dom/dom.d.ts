@@ -43,6 +43,7 @@ export interface Adapter {
 export interface DomAdapter extends Adapter {
   get body(): HTMLBodyContents;
   query: (selector: CSSSelectorString) => AccessNode[];
+  first: (selector: CSSSelectorString) => AccessNode;
   get: (id: string) => AccessNode;
   contains: (node: AccessNode) => boolean;
   newNode: (str: DomString) => AccessNode;
@@ -71,6 +72,7 @@ export interface DomNode {
   get type(): typeof NODE_TYPES;
   get isElement(): boolean;
   get isText(): boolean;
+  get attrs(): any;
   hasAttr(attribute: string): boolean;
   getAttr(attribute: string): string;
   setAttr(attribute: string, value: string): void;

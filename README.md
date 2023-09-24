@@ -23,7 +23,7 @@ Example config JSON:
 ]
 ```
 
-See [test-config.json](./test/test-config.json) for more examples
+See [test-config.json](test/data/test-config.json) for more examples
 
 Example running:
 

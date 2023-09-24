@@ -12,7 +12,8 @@
       "p.h2": "h2",
       "p.h3": "h3|all",
       "p.h4": "h4|other",
-      "p.h5a, p.h5b": "h5|other"
+      "p.h5a": "h5|other",
+      "p.h5b": "h5|other"
     }
   }, {
     "name": "Map span.small to <small>",
@@ -69,11 +70,6 @@
     "name": "X - TODO - Group list items",
     "task": "group-elements",
     "selector": "p.ul-li",
-    "args": [
-      {
-        "wrapper": "ul.new-list",
-        "keep-class": false
-      }
-    ]
+    "wrapper": "ul.new-list"
   }
 ]

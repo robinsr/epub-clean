@@ -50,6 +50,8 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
   debug('Match Props:', matchProps);
   debug('New Props:', newProps);
 
+  console.log(node.attrs);
+
   let newNode = dom.newNode(mapNode(node, matchProps, newProps));
 
   return result().replace(node, newNode).final();

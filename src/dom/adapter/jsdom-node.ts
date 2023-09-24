@@ -141,6 +141,12 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
       return NODE_TYPES[_node.nodeType] === 'TEXT';
     },
 
+    get attrs() {
+      return Array.from(_node.attributes).reduce((acc, attr) => ({
+         ...acc, [attr.name]: attr.value
+      }), {});
+    },
+
     hasAttr(attribute) {
       return _node.hasAttribute(attribute);
     },

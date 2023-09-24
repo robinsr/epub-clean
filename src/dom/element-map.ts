@@ -34,7 +34,11 @@ export const mapNode = (
     newClss = [ ...oldClss, ...newClss ];
   }
 
+  let attrs = Object.entries(node.attrs)
+    .filter(([k, v]) => k !== 'class')
+    .reduce((acc, [k,v]) => acc + `${k}="${v}"`, ' ');
+
   let classString = newClss.length ? ` class="${newClss.join(' ')}"` : "";
 
-  return `<${newTag}${classString}>${content}</${newTag}>`;
+  return `<${newTag}${classString}${attrs}>${content}</${newTag}>`;
 }
