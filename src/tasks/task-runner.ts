@@ -88,8 +88,6 @@ const TaskRunner = (adapter, opts) => {
 
   global.__opts.targets && info('Resolved tasks:', tasks.map(taskLogger));
 
-  process.exit(1);
-
   tasks.forEach(task => {
     info(`Starting task: "${task.name}"`);
   

@@ -6,6 +6,7 @@ import { NODE_TYPES } from './node.js';
 import { AccessNode, DomNode } from '../dom.js';
 
 import jsdom from 'jsdom';
+import {Optional} from "typescript-optional";
 
 
 
@@ -19,6 +20,10 @@ const isElement = (node) => {
   return NODE_TYPES[node.nodeType] === 'ELEMENT';
 }
 
+const default_pos = {
+  startLine: null,
+  startCol: 0
+}
 
 const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
   let _node = node;
@@ -30,10 +35,8 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
     //return doc;
   }
 
-  let location = (n => {
-    let loc = isElement(n) ? dom.nodeLocation(n) : null;
-    return loc ? ("" + loc.startLine).padStart(4, '0') : 'NEW';
-  })(_node);
+  let location = isElement(node) ? dom.nodeLocation(node) : default_pos;
+  let lineNo = location ? ("" + location.startLine).padStart(4, '0') : 'NEW';
 
   if (_node.dataset && !_node.dataset.rid) {
     _node.dataset.rid = uuid();
@@ -117,7 +120,13 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
     },
 
     get tag() {
-      return (_node.tagName||'?').toLowerCase();
+      if (_node.tagName) {
+        return _node.tagName.toLowerCase();
+      } else if (_node.outerHTML) {
+        return /<(\w+)/.exec(_node.outerHTML)[1];
+      } else {
+        return '?';
+      }
     },
 
     get type() {
@@ -191,10 +200,26 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
 
     get parent() {
       return JSDOMNode(dom, _node.parentNode as HTMLElement);
+    },
+
+    find(selector: string): AccessNode[] {
+      return Array.from(_node.querySelectorAll(selector)).map(n => {
+        return JSDOMNode(dom, n as HTMLElement)
+      })
+    },
+
+    next(): Optional<AccessNode> {
+      let sibling = _node.nextElementSibling;
+
+      if (sibling) {
+        return Optional.of(JSDOMNode(dom, sibling as HTMLElement));
+      } else {
+        return Optional.empty();
+      }
     }
   }
 
-  return Object.assign(accessors, Tag(accessors, location));
+  return Object.assign(accessors, Tag(accessors, lineNo));
 }
 
 

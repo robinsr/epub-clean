@@ -2,6 +2,9 @@ import result from './task-result.js';
 import {CommonTaskArgs, GroupElementsArgs, TransformTaskType} from './tasks.js';
 import {validators, taskSchema, validateSchema} from "./task-config.js";
 
+import {parseElementMap, mapNode} from "../dom/element-map.js";
+import {ParsedElementMap, parseSelector} from "../dom/index.js";
+
 const task_name = 'group-elements';
 
 const argsSchema = {
@@ -14,16 +17,82 @@ const validate = (args: GroupElementsArgs) => {
 }
 
 
+const createWrapperEl = (selector: string, content: string) => {
+  let wrapper = parseSelector(selector)
+  let t = wrapper.tag;
+  let c = wrapper.classList.join(' ');
+  let cls = c.length ? ` class="${c}"` : "";
+
+  return `<${t}${cls}>\n${content}\n</${t}>`;
+}
+
+interface GroupElemConfig {
+  map: ParsedElementMap,
+  mapKeys: string[];
+  extraELSelect: string;
+}
 
 const GroupElements: TransformTaskType<GroupElementsArgs> = {
   type: 'group-elements',
-  configure: (args: CommonTaskArgs) => ({
+  configure: (args: GroupElementsArgs) => ({
     name: args.name,
     selector: args.selector,
     validate,
-    parse: (args) => args,
+    parse: (args) => {
+
+      let addElems = Object.keys(args.map).filter(key => {
+        return key !== args.selector;
+      }).join(', ');
+
+      return args;
+    },
     transform: (config, node, dom) => {
-      return result().final()
+
+      let r = result();
+
+      if (!dom.contains(node)) {
+        console.log('node no longer exists. bailing');
+        return r.final();
+      }
+
+      let wrapper = parseSelector(config.selector);
+      let elemMap = parseElementMap(config.map);
+      let mapKeys = Object.keys(elemMap);
+
+      let siblings = [ node ];
+      let next = node.next();
+      while (next.isPresent() && next.get().matches(args.selector)) {
+        siblings.push(next.get());
+        next = next.get().next();
+      }
+
+      let addElems = Object.keys(config.map).filter(key => {
+        return key !== args.selector;
+      }).join(', ');
+
+      console.log(`addElems: [${addElems}] and not [${args.selector}]`);
+
+      while (next.isPresent()
+        && next.get().matches(addElems)
+        && !next.get().matches(args.selector)) {
+        siblings.push(next.get());
+        next = next.get().next();
+      }
+
+      let mappedEls = siblings.map(sib => {
+        let matchKey = mapKeys.find(key => sib.matches(key));
+        if (matchKey) {
+          return mapNode(sib, elemMap[matchKey].from, elemMap[matchKey].to);
+        } else {
+          return sib.outer;
+        }
+      }).join('\n');
+
+      siblings.slice(1).forEach(s => r.remove(s));
+
+      let newNode = dom.newNode(createWrapperEl(args.wrapper, mappedEls));
+
+      return r.replace(node, newNode).final();
     }
   })
 }

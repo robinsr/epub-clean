@@ -1,12 +1,16 @@
+import {
+  isValidSelector,
+  getNamespaces,
+  parseSelector,
+  removeNamespaces,
+  sortSelectors
+} from '../../src/dom/index.js';
+import {clamp, range, times, values} from "remeda";
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 
-import { describe, it } from 'mocha';
-import { isValidSelector } from '../../src/dom/index.js';
-import {clamp, range, times} from "remeda";
 
-
-
-let css = {
+const css = {
   basic: {
     wildcard: '*',
     type: [ 'p', 'div', 'span', 'h1', 'h2' ],
@@ -63,12 +67,15 @@ let css = {
     child: '>',
     nextSibling: '+',
     following: '~'
-  }
+  },
+  namespaces: 'this|that|the-other-thing',
+  big_selector: 'div#doc-root>.section[epub:type*=chap]+a:visited'
 }
 
 const unexpected = sel => `Unexpected result for selector "${sel}"`;
 
 const query = (s, isValid = true) => {
+
   expect(isValidSelector(s)).to.be.eq(isValid, unexpected(s))
 }
 
@@ -108,18 +115,26 @@ let glueIn = (members: string[], moreglue: () => string): string => {
   return members.slice(1).reduce((i, m) => i + moreglue() + m, members[0])
 }
 
-
-
-let vals = arr => Object.values(arr);
-
 describe('dom/selector', () => {
   describe('#isValidSelector', () => {
     describe('basic', () => {
-      it('should throw for invalid', () => {
+
+      it('should throw for an invalid selector', () => {
         query('@#$%^&^%$#$%^', INVALID);
       });
+
       it('should not throw for any basic selectors', () => {
         basics.forEach(sel => query(sel, VALID));
+      });
+
+      it('should ignore any trailing namespace', () => {
+
+        let test_selectors = [
+          'p.some-text|qwerty',
+          'p.some-text|' + css.namespaces,
+        ]
+
+        test_selectors.forEach(sel => query(sel, VALID));
       });
     });
 
@@ -161,7 +176,7 @@ describe('dom/selector', () => {
           let c = range(0, spin(variance)).map(n => spin(combos));
           let sel = glue(c, () => spin(basics));
 
-          let psuedo = vals(css.userActionPseudoClasses);
+          let psuedo = values(css.userActionPseudoClasses);
           let ts = range(0, spin(variance))
             .map(n => dice(30, spin(css.basic.type), t => t + spin(psuedo)));
 
@@ -175,6 +190,115 @@ describe('dom/selector', () => {
             query(sel, VALID);
           });
         });
+      });
+    });
+  });
+
+
+  describe('getNamespaces', () => {
+    it('return any namespaces from selector strings', () => {
+      let result = getNamespaces(`${css.big_selector}|${css.namespaces}`);
+
+      expect(result).to.be.a('array');
+      expect(result).to.have.length(3);
+
+      css.namespaces.split('|').forEach((ns, i) => {
+        expect(result[i]).to.eq(ns);
+      });
+    });
+  });
+
+  describe('#removeNamespaces', () => {
+    it('should remove trailing namespaces from selector strings', () => {
+      let result = removeNamespaces(`${css.big_selector}|${css.namespaces}`);
+
+      expect(result).to.be.a('string');
+      expect(result).to.eq(css.big_selector);
+    });
+  });
+
+
+  describe('parseSelector', () => {
+    let tag = 'p';
+    let classList = [ 'a-cls', 'b-cls' ];
+    let selector = `${tag}.${classList.join('.')}|${css.namespaces}`
+
+    it('should return the tag name', () => {
+      let results = parseSelector(selector);
+      expect(results).to.be.a('object');
+      expect(results).to.have.property('tag', 'p')
+    });
+
+    it('should return the classlist', () => {
+      let results = parseSelector(selector);
+      expect(results).to.be.a('object');
+      expect(results).to.have.property('classList');
+      expect(results.classList).to.be.an('array')
+        .that.has.all.members(classList);
+    });
+
+    it('should return the namespaces', () => {
+      let results = parseSelector(selector);
+      expect(results).to.be.a('object');
+      expect(results).to.have.property('namespaces');
+      expect(results.namespaces).to.be.an('array')
+        .that.has.all.members(css.namespaces.split('|'));
+    });
+
+    it('should return values false for "preserveAll" and "preserveOther', () => {
+      let results = parseSelector(selector);
+      expect(results).to.be.a('object');
+      expect(results).to.have.property('preserveAll', false);
+      expect(results).to.have.property('preserveOther', false);
+    });
+
+    it('should return true values for "preserveAll"', () => {
+      let selector = `${tag}.${classList.join('.')}|all`
+      let results = parseSelector(selector);
+      expect(results).to.be.a('object');
+      expect(results).to.have.property('preserveAll', true);
+    });
+
+    it('should return true values for "preserveOther"', () => {
+      let selector = `${tag}.${classList.join('.')}|other`
+      let results = parseSelector(selector);
+      expect(results).to.be.a('object');
+      expect(results).to.have.property('preserveOther', true);
+    });
+  });
+
+  describe('#sortSelectors', () => {
+    it('should sort the list, with more specific selectors first', () => {
+      let selectors = [
+        'p.cl1',
+        'p.cl1#idA',
+        'p.cl1.cl2.cl3.cl4',
+        'p#id1 p#id2',
+        'p.cl1 p#id2',
+        'p',
+        'p.cl1.cl2.cl3.cl4.cl5',
+        'p[thing^="abc"]',
+        'p.cl1.cl2',
+        'p>span~div p~h1>.some-class-name',
+      ];
+
+      let expected = [
+        'p#id1 p#id2',
+        'p.cl1 p#id2',
+        'p.cl1#idA',
+        'p.cl1.cl2.cl3.cl4.cl5',
+        'p.cl1.cl2.cl3.cl4',
+        'p.cl1.cl2',
+        'p>span~div p~h1>.some-class-name',
+        'p[thing^="abc"]',
+        'p.cl1',
+        'p'
+      ]
+
+      let results = sortSelectors(selectors)
+
+      expected.forEach((ex, i) => {
+        expect(results.at(i)).to.eq(ex);
       });
     });
   });

@@ -1,6 +1,8 @@
 import { ParsedSelectorString } from './dom.js';
 
 import jsdom from 'jsdom';
+
+import * as spec from 'specificity';
 const { JSDOM } = jsdom;
 
 const htmlstring = fragment => `<!DOCTYPE html>
@@ -34,8 +36,10 @@ export const isValidSelector = (selector: string): boolean => {
  */
 export const parseSelector = (selector: string): ParsedSelectorString => {
   let namespaces = getNamespaces(selector);
+  let clean = removeNamespaces(selector);
+
   
-  let [ tag, ...classList ] = removeNamespaces(selector).split('.');
+  let [ tag, ...classList ] = clean.split('.');
 
   let preserveAll = namespaces.includes('all');
   let preserveOther = namespaces.includes('other');
@@ -55,5 +59,22 @@ export const removeNamespaces = (sel: string): string => {
  */
 export const getNamespaces = (sel: string): Array<string> => {
   return sel.split('|').slice(1);
+}
+
+const echo = (msg: any): any => {
+  console.log(msg);
+  return msg;
+}
+
+
+export const sortSelectors = (selectors: string[]): string[] => {
+  return selectors.map(sel => ({
+    val: sel,
+    score: spec.calculate(removeNamespaces(sel))
+  }))
+    .sort((a, b) => spec.compare(a.score, b.score))
+    .map(echo)
+    .map(i => i.val)
+    .reverse()
 }
 

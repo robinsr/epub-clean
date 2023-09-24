@@ -32,8 +32,6 @@ const customJoi = Joi.extend((joi) => {
   }
 });
 
-
-
 const elementMap = () => Joi.object({})
         .pattern(
           customJoi.selector(),

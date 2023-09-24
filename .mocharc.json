@@ -1,16 +1,20 @@
 {
   //"require": "ts-node/register",
   // Specify "loader" for native ESM
-  //"loader": "ts-node/esm",
+  "loader": "ts-node/esm",
   "node-option": [
     "experimental-specifier-resolution=node",
     "loader=ts-node/esm"
   ],
-  "require": "test/hooks.ts",
+  "require": [
+    "test/hooks.ts"
+  ],
   "reporter": "spec",
   "extension": ["ts"],
   "spec": [
     "test/**/*.spec.ts"
   ],
-  "watch-files": [ ]
+  "watch-files": [
+    "test/**/*.spec.ts"
+  ]
 }

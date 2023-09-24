@@ -1,12 +1,14 @@
 import { Adapter, DomAdapter } from './../dom.js';
 
-
+import format from "html-format";
 import jsdom from 'jsdom';
 const { JSDOM } = jsdom;
 
 
 import JSDOMNode from './jsdom-node.js';
 
+const format_indent = ' '.repeat(4);
+const format_width = 2000;
 
 
 const JSDOMAdapter = (adapter: Adapter): DomAdapter => {
@@ -20,7 +22,8 @@ const JSDOMAdapter = (adapter: Adapter): DomAdapter => {
     },
 
     get body() {
-      return dom.window.document.body.outerHTML;
+      return format(dom.window.document.body.outerHTML, format_indent, format_width);
+      //return dom.window.document.body.outerHTML;
     },
 
     query(selector) {

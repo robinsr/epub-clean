@@ -8,14 +8,16 @@ import {
   isValidSelector,
   parseSelector,
   getNamespaces,
-  removeNamespaces
+  removeNamespaces,
+  sortSelectors
 } from './selector.js';
 
 export {
   isValidSelector,
   parseSelector,
   getNamespaces,
-  removeNamespaces
+  removeNamespaces,
+  sortSelectors
 }
 
 import type {
@@ -24,6 +26,8 @@ import type {
   CSSNamespace,
   TagName,
   ParsedSelectorString,
+  ElementMap,
+  ParsedElementMap,
   TagNode,
   Adapter,
   DomAdapter,
@@ -37,6 +41,8 @@ export {
   CSSNamespace,
   TagName,
   ParsedSelectorString,
+  ElementMap,
+  ParsedElementMap,
   TagNode,
   Adapter,
   DomAdapter,

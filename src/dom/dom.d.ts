@@ -1,4 +1,5 @@
 import { NODE_TYPES } from './adapter/node.js';
+import { Optional } from "typescript-optional";
 
 export type CSSSelectorString = string;
 export type CSSClassName = string;
@@ -12,6 +13,17 @@ export interface ParsedSelectorString {
   namespaces: Array<CSSNamespace>;
   preserveAll: boolean;
   preserveOther: boolean;
+}
+
+export interface ElementMap {
+  [key: CSSSelectorString]: CSSSelectorString
+}
+
+export interface ParsedElementMap {
+  [key: CSSSelectorString]: {
+    from: ParsedSelectorString;
+    to: ParsedSelectorString;
+  }
 }
 
 export interface TagNode {
@@ -36,11 +48,15 @@ export interface DomAdapter extends Adapter {
   newNode: (str: DomString) => AccessNode;
 }
 
+export interface NodeLocation {
+  startCol: number;
+}
+
 export interface DomNode {
   get node(): HTMLElement;
   get id(): string;
   setId(str: string): void
-  get location(): string;
+  get location(): NodeLocation;
   get isValid(): boolean;
   remove(): void;
   replace(other: AccessNode): void;
@@ -70,6 +86,9 @@ export interface DomNode {
   contains(node: AccessNode): boolean;
   isSameNode(node: AccessNode): boolean;
   get parent(): AccessNode;
+  find(selector: string): AccessNode[];
+  next(): Optional<AccessNode>;
+
 }
 
 export type AccessNode = DomNode & TagNode;

@@ -1,5 +1,11 @@
-//import { SchemaDefinition } from "validate/index.js";
-import { AccessNode, DomAdapter, CSSSelectorString } from "../dom/index.js";
+import {
+  AccessNode,
+  DomAdapter,
+  CSSSelectorString,
+  ElementMap,
+  ParsedElementMap
+} from "../dom/index.js";
+
 
 export interface CommonTaskArgs {
   name: string;  // name of configured task ("do a thing with <span> tags")
@@ -21,10 +27,6 @@ export interface ChangeCaseArgs extends CommonTaskArgs {
   case: 'lower-case' | 'title-case' | 'upper-case';
 }
 
-interface ElementMap {
-  [key: CSSSelectorString]: CSSSelectorString
-}
-
 export interface GroupElementsArgs extends CommonTaskArgs {
   wrapper: CSSSelectorString;
   map: ElementMap;
@@ -34,14 +36,9 @@ export interface MapElementsArgs extends CommonTaskArgs {
   map: ElementMap;
 }
 
-export interface MapElementsConfig extends CommonTaskArgs{
+export interface MapElementsConfig extends CommonTaskArgs {
   mapKeys: Array<CSSSelectorString>
-  map: {
-    [key: CSSSelectorString]: {
-      from: ParsedSelectorString;
-      to: ParsedSelectorString;
-    }
-  }
+  map: ParsedElementMap
 }
 
 export interface RemoveElementsArgs extends CommonTaskArgs {
