@@ -4,10 +4,12 @@ import {validators, taskSchema, validateSchema} from "./task-config.js";
 
 import {parseElementMap, mapNode} from "../dom/element-map.js";
 import {ParsedElementMap, parseSelector} from "../dom/index.js";
-import {info} from "../log.js";
+import { tasklog } from "../log.js";
 import { parseSelectorV2 } from '../dom/selector.js';
 
 const task_name = 'group-elements';
+
+const log = tasklog.getSubLogger({ name: task_name });
 
 const argsSchema = {
   wrapper: validators.selector().withTag(),
@@ -40,10 +42,10 @@ const GroupElements: TransformTaskType<GroupElementsArgs> = {
     name: args.name,
     selector: args.selector,
     validate,
-    parse: (args) => {
+    parse: ({ selector, map = {} }) => {
 
-      let addElems = Object.keys(args.map).filter(key => {
-        return key !== args.selector;
+      let addElems = Object.keys(map).filter(key => {
+        return key !== selector;
       }).join(', ');
 
       return args;
@@ -53,7 +55,7 @@ const GroupElements: TransformTaskType<GroupElementsArgs> = {
       let r = result();
 
       if (!dom.contains(node)) {
-        info('node no longer exists. bailing');
+        log.info('node no longer exists. bailing');
         return r.final();
       }
 
@@ -72,7 +74,7 @@ const GroupElements: TransformTaskType<GroupElementsArgs> = {
         return key !== args.selector;
       }).join(', ');
 
-      info(`addElems: [${addElems}] and not [${args.selector}]`);
+      log.info(`addElems: [${addElems}] and not [${args.selector}]`);
 
       while (next.isPresent()
         && next.get().matches(addElems)

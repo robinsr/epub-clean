@@ -1,8 +1,7 @@
 import { Command } from 'commander';
-const program = new Command();
-
-
 import clean from './clean.js';
+
+const program = new Command();
 
 program
   .name('epub-clean')
@@ -18,7 +17,7 @@ program
   .option('-fd, --full-diff', 'prints full file diff')
   .option('--dryrun', 'does not write output')
   .option('--targets', 'prints targets to by updated without performing updates')
-  .action((filename, opts) => {
+  .action((filename, opts: CleanCmdOpts) => {
     global.__opts = opts;
     return clean(filename, opts)
   });

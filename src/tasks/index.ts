@@ -1,12 +1,13 @@
+import { tasklog } from '../log.js';
 import { TransformTaskType } from './tasks.js';
-
 import AmendAttrsTask  from './amend-attrs.js';
 import GroupElementsTask from './group-elements.js';
 import ChangeCaseTask from './change-case.js';
 import RemoveElementsTask from './remove-elements.js';
 import MapElementsTask from './map-elements.js';
 
-import { info } from '../log.js';
+
+const log = tasklog.getSubLogger({ name: 'tasks' });
 
 const _tasks = [
   AmendAttrsTask,
@@ -20,7 +21,7 @@ const tasks = _tasks.reduce((map, task) => {
   return map.set(task.type, task);
 }, new Map<string, TransformTaskType<any>>());
 
-info('Available tasks:', tasks);
+log.info('Available tasks:', tasks);
 
 const getTask = (taskName: string): TransformTaskType<any> => {
   if (!tasks.has(taskName)) {

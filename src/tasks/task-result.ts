@@ -1,59 +1,105 @@
 import { AccessNode } from "../dom/index.js";
 import { TransformTaskResult, TransformTaskResultsBuilder } from "./tasks.js";
+import { isEmpty, pick } from 'remeda';
+import { Change, diffLines, diffChars } from 'diff';
 
-const TaskResult = (): TransformTaskResultsBuilder => {
-  let _remove = [];
-  let _replace = [];
-  let _html = null;
-  let _error = null;
+const scrubId = (str: string) => {
+  return str.replaceAll(/\s?data-rid="[\d\w]+"\s?/g, '');
+}
+
+const diffHeader = (name: string) => {
+  console.log('[DIFF] '.grey + `(${name}):`.white);
+}
+
+abstract class DocumentChange {
+  #line_break = false
+  protected constructor(line_break = false) {
+    this.#line_break = line_break;
+  }
+
+  print() {
+    this.diff.forEach(part => {
+      // green for additions, red for deletions grey for common parts
+      const color = part.added ? 'green' : part.removed ? 'red' : 'grey';
+      process.stderr.write('\t' + part.value[color]);
+
+      this.#line_break && process.stderr.write('\n');
+    });
+  }
+
+  protected abstract get diff(): Change[];
+}
+
+class ReplaceAction extends DocumentChange {
+  constructor(before: AccessNode, after: AccessNode, name: string) {
+    super();
+  }
+
+  get diff(): Change[] {
+    return diffLines(scrubId(before), scrubId(after))
+  }
+}
+
+
+class RemoveAction {
+  constructor(target: AccessNode) {
+  }
+}
+
+class ReplaceContentsAction {
+  constructor(target: AccessNode) {
+  }
+}
+
+class TransformTaskResultsBuilder {
+  private _remove: RemoveAction[] = [];
+  private _replace: ReplaceAction[] = [];
+  private _html: ReplaceContentsAction = null;
+  private _error = null;
  
-  return {
-    remove(node) {
-      _remove.push(node);
-      return this;
-    },
+  remove(node) {
+    this._remove.push(node);
+    return this;
+  }
 
-    replace(oldNode: AccessNode, newNode: AccessNode): TransformTaskResultsBuilder {
-      _replace.push([oldNode, newNode]);
-      return this;
-    },
+  replace(oldNode: AccessNode, newNode: AccessNode): TransformTaskResultsBuilder {
+    this._replace.push(new ReplaceAction(oldNode, newNode, 'TODO'));
+    return this;
+  }
 
-    html(html) {
-      _html = html;
-      return this;
-    },
+  html(html: ReplaceContentsAction) {
+    this._html = html;
+    return this;
+  }
 
-    error(err) {
-      _error = err;
-      return this.final();
-    },
+  error(err) {
+    this._error = err;
+    return this.final();
+  }
 
-    final() {
-      return {
-        noChange: empty(_remove) && empty(_replace) && empty(_html) && empty(_error),
-        remove: _remove,
-        replace: _replace,
-        html: _html,
-        error: _error
-      }
+  get noChange() {
+    return [
+      this._remove, this._replace,
+      this._html, this._error ].every(isEmpty);
+  }
+
+  final(): TransformTaskResult {
+    return {
+      noChange: this.noChange,
+      remove: this._remove,
+      replace: this._replace,
+      html:  this._html,
+      error: this._error
     }
   }
 }
 
-const empty = (arr: string | Array<any>): boolean => {
-  if (arr === null) return true;
-  if (typeof arr === 'string' && arr === '') return true
-  if (Array.isArray(arr) && arr.length === 0) return true;
-  return false;
-}
-
-const result = (): TransformTaskResultsBuilder =>  {
-  return TaskResult();
+const result = () =>  {
+  return new TransformTaskResultsBuilder();
 }
 
 export const error = (err: string): TransformTaskResult => {
-  return TaskResult().error(err);
+  return new TransformTaskResultsBuilder().error(err);
 }
-
 
 export default result;

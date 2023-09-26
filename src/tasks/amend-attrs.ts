@@ -1,4 +1,4 @@
-import { error } from '../log.js';
+import { tasklog } from '../log.js';
 import { AccessNode } from '../dom/index.js';
 import { validators, validateSchema, taskSchema } from './task-config.js'
 import result from './task-result.js';
@@ -10,6 +10,8 @@ import {
 } from './tasks.js';
 
 const TASK_NAME = 'amend-attrs';
+
+const log = tasklog.getSubLogger({ name: TASK_NAME });
 
 const { array, forbid, object, oneOf, req, string } = validators;
 
@@ -52,7 +54,7 @@ const configure = (config): TaskDefinition<AmendAttrArgs> => ({
 
       if (op === 'regex') {
         if (!currentVal) {
-          error(`Cannot update attribute ${attr} on ${node.tag}`);
+          log.error(`Cannot update attribute ${attr} on ${node.tag}`);
           return node;
         }
 

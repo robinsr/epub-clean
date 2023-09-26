@@ -1,15 +1,15 @@
+import { domlog } from '../../log.js';
+
 import ShortUniqueId from 'short-unique-id';
+import { Optional } from "typescript-optional";
+import jsdom from 'jsdom';
 
 import Tag from '../tag.js';
-import { debug, error } from '../../log.js';
 import { NODE_TYPES } from './node.js';
 import { AccessNode, DomNode } from '../dom.js';
 
-import jsdom from 'jsdom';
-import {Optional} from "typescript-optional";
 
-
-
+const log = domlog.getSubLogger({ name: 'selector' });
 
 const short = new ShortUniqueId.default({ length: 8 })
 const uuid = () => {
@@ -31,7 +31,7 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
   
   if (!_node) {
     //throw new Error('no DOM node supplied')
-    error('No DOM node supplied');
+    log.error('No DOM node supplied');
     //return doc;
   }
 
@@ -69,20 +69,20 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
     },
 
     replace(other) {
-      debug(`Replacing node:\n\t${this.tagSummary['red']}\n\t${other.tagSummary['green']}`)
+      log.debug(`Replacing node:\n\t${this.tagSummary['red']}\n\t${other.tagSummary['green']}`)
 
       if (_node.isSameNode(other.node)) {
-        error('Replacing is same node!');
+        log.error('Replacing is same node!');
         return;
       }
 
       if (!doc.contains(_node)) {
-        error('Node is not in the doc!', this.tagSummary);
+        log.error('Node is not in the doc!', this.tagSummary);
         return;
       }
 
       if (!_node.parentNode) {
-        error(`no parent node for node ${this.tagSummary}`)
+        log.error(`no parent node for node ${this.tagSummary}`)
         doc.body.replaceChild(other.node, _node);
       } else {
         _node.parentNode.replaceChild(other.node, _node);

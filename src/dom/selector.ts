@@ -1,3 +1,8 @@
+import { domlog } from '../log.js'
+import { ParsedSelectorString } from './dom.js';
+import jsdom from 'jsdom';
+import * as spec from 'specificity';
+import { isEmpty } from 'remeda';
 import {
   ClassSelector,
   CssNodePlain,
@@ -8,12 +13,9 @@ import {
   TypeSelector,
 } from 'css-tree';
 
-import { ParsedSelectorString } from './dom.js';
+const log = domlog.getSubLogger({ name: 'selector' });
 
-import jsdom from 'jsdom';
 
-import * as spec from 'specificity';
-import { isEmpty } from 'remeda';
 const { JSDOM } = jsdom;
 
 const htmlstring = fragment => `<!DOCTYPE html>
@@ -73,7 +75,7 @@ export const getNamespaces = (sel: string): Array<string> => {
 }
 
 const echo = (msg: any): any => {
-  console.log(msg);
+  log.info(msg);
   return msg;
 }
 
@@ -96,7 +98,7 @@ const default_tag = (selector: string = '', tag?: string): ParsedSelectorString 
 });
 
 export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
-  console.log(selector);
+  log.info(selector);
 
   if (isEmpty(selector)) {
     return null;
@@ -120,7 +122,7 @@ export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
 
   try {
     let tree = toPlainObject(parse(removeNamespaces(selector), { context }));
-    console.log(tree);
+    log.info(tree);
 
     let type: string, children: CssNodePlain[], p: ParsedSelectorString;
 
@@ -134,17 +136,17 @@ export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
       type = (tree as SelectorPlain).type;
       children = (tree as SelectorPlain).children;
       p = extractValues(tree as SelectorPlain);
-      console.log(p)
+      log.info(p)
     }
 
-    console.log('type:', type)
-    console.log('children:', children);
+    log.info('type:', type)
+    log.info('children:', children);
 
     return p;
 
   } catch (e) {
-    if (e instanceof Error) console.error(`${e.message} "${selector}"`);
-    else console.error(`Invalid selector "${selector}"`);
+    if (e instanceof Error) log.error(`${e.message} "${selector}"`);
+    else log.error(`Invalid selector "${selector}"`);
 
     return default_tag();
   }

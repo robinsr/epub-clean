@@ -1,10 +1,13 @@
 import { existsSync, readFileSync } from 'fs';
 import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
-import { DomAdapter } from '../dom/index.js';
-import { diffChars, diffLines, error, info, warn } from '../log.js';
+import { Adapter, DomAdapter } from '../dom/index.js';
+import { diffChars, diffLines, applog } from '../log.js';
 import getTask from './index.js';
 import { isEmpty } from 'remeda';
+import { CleanCmdOpts } from '../clean.js';
+import * as process from 'process';
 
+const log = applog.getSubLogger({ name: 'task-runner' });
 
 const getConfig = (filename: string): ConfigFile  => {
   if (!existsSync(filename)) {
@@ -13,7 +16,6 @@ const getConfig = (filename: string): ConfigFile  => {
 
   return JSON.parse(readFileSync(filename, 'utf8'));
 }
-
 
 const parseTaskConfig = (args: TaskArgs): ParsedTask<any> => {
   let task = getTask(args.task).configure(args);
@@ -34,13 +36,13 @@ const queryTargetsForTask = (task: ParsedTask<any>, adapter: DomAdapter) => {
 
   let nodes = adapter.query(selector);
 
-  info(`Task: [${name}] (${selector}) target count: ${nodes.length}`);
+  log.info(`Task: [${name}] (${selector}) target count: ${nodes.length}`);
 
   task.targets = nodes.map(node => ({
     node, include: filter ? filter(node) : true
   }))
       .map(target => {
-        global.__opts.targets && info(' - ', target.node.tagSummary[target.include ? 'green' : 'red']);
+        global.__opts.targets && log.info(' - ', target.node.tagSummary[target.include ? 'green' : 'red']);
         return target;
       })
       .filter(target => target.include);
@@ -63,8 +65,10 @@ const taskLogger = (t: ParsedTask<any>) => {
 }
 
 
-const TaskRunner = (adapter, opts) => {
-  const config = getConfig(opts.config);
+const TaskRunner = (adapter: DomAdapter, opts: CleanCmdOpts) => {
+  const config = getConfig(opts.config.toString());
+
+
   
   let tasks = config.map(parseTaskConfig)
 
@@ -78,7 +82,7 @@ const TaskRunner = (adapter, opts) => {
   }, []);
 
   if (!isEmpty(errors)) {
-    errors.forEach(e => error(e));
+    errors.forEach(e => log.error(e));
     process.exit(1);
   }
 
@@ -86,22 +90,24 @@ const TaskRunner = (adapter, opts) => {
     .map(task => queryTargetsForTask(task, adapter))
     .filter(task => task.targets.length > 0);
 
-  global.__opts.targets && info('Resolved tasks:', tasks.map(taskLogger));
+  global.__opts.targets && log.info('Resolved tasks:', tasks.map(taskLogger));
+
+  process.exit(1);
 
   tasks.forEach(task => {
-    info(`Starting task: "${task.name}"`);
+    log.info(`Starting task: "${task.name}"`);
   
     task.targets.forEach(target => {
       let { node } = target;
       let result = task.transform(task.config, target.node, adapter);
 
       if (result.error) {
-        error(result.error);
+        log.error(result.error);
         throw new Error(result.error)
       }
 
       if (result.noChange) {
-        warn(`No change for task: ${task.name}:${node.location}`);
+        log.warn(`No change for task: ${task.name}:${node.location}`);
       }
 
       if (result.replace) {
@@ -133,6 +139,8 @@ const TaskRunner = (adapter, opts) => {
   adapter.query('').forEach(n => {
     n.removeAttr('data-rid');
   });
+
+  return this;
 }
 
 export default TaskRunner;

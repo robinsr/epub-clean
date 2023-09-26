@@ -1,4 +1,4 @@
-import { debug } from '../log.js';
+import { tasklog } from './../log.js';
 import {
   TransformTaskResult,
   TransformFunction,
@@ -17,6 +17,8 @@ import result from './task-result.js';
 
 
 const TASK_NAME = 'map-elements';
+
+const log = tasklog.getSubLogger({ name: TASK_NAME });
 
 const argsSchema = {
   map: validators.elementMap()
@@ -38,7 +40,7 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
 
   let matchKey = mapKeys.find(key => node.matches(key));
 
-  debug(`elem matches "${matchKey}"?:`);
+  log.debug(`elem matches "${matchKey}"?:`);
 
   if (!matchKey) {
     return result().error(`No transform key found for element ${node.selector}`);
@@ -47,10 +49,10 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
   let matchProps = map[matchKey].from;
   let newProps = map[matchKey].to;
 
-  debug('Match Props:', matchProps);
-  debug('New Props:', newProps);
+  log.debug('Match Props:', matchProps);
+  log.debug('New Props:', newProps);
 
-  console.log(node.attrs);
+  log.debug(node.attrs);
 
   let newNode = dom.newNode(mapNode(node, matchProps, newProps));
 

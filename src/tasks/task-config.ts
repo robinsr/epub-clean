@@ -2,8 +2,10 @@ import Joi, { ObjectSchema } from 'joi';
 
 import { ValidationResult } from "./tasks.js";
 import { isValidSelector, parseSelector } from '../dom/index.js';
-import { debug, info, warn } from "../log.js";
+import { tasklog } from "../log.js";
 import { parseSelectorV2 } from '../dom/selector.js';
+
+const log = tasklog.getSubLogger({ name: 'config' });
 
 const JOI_OPTS = {
   abortEarly: false,
@@ -13,7 +15,6 @@ const JOI_OPTS = {
 const point = str =>  `\u2B95 ${str} \u2B05`;
 
 const selectorMsgs = {
-  //'object.unknown': `Invalid CSS selector in mapping: [\u2B95 {#key} \u2B05 : {#value} ]`,
   'object.unknown': `Invalid CSS selector in mapping: [ ${point('{#key}')} : {#value} ]`,
   'selector.invalid': `Invalid CSS selector in mapping: [ {#key} : ${point('{#value}')} ]`,
   'selector.needsTag': '{#label} {:#value} requires type selector'
@@ -97,7 +98,7 @@ export const validateSchema = (
   args: object,
   label: string = "Unknown"
 ): ValidationResult | null => {
-  debug(JSON.stringify(schema.describe(), null, 4));
+  log.debug('Validating schema:', schema.describe());
 
   let opts = {
   //  context: { forTask: label }
@@ -109,7 +110,7 @@ export const validateSchema = (
     return null;
   }
 
-  warn(`Validation errors (${label}):`);
+  log.warn(`Validation errors (${label}):`);
 
   let addLabel = str => `(${label}) ${str};`
 
