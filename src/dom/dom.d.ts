@@ -53,6 +53,8 @@ export interface NodeLocation {
   startCol: number;
 }
 
+export type NodeFormatOptions = 'full' | 'diff';
+
 export interface DomNode {
   get node(): HTMLElement;
   get id(): string;
@@ -63,6 +65,7 @@ export interface DomNode {
   replace(other: AccessNode): void;
   clone(): AccessNode;
   get outer(): string;
+  get domString(): string;
   set outer(htmlStr: string);
   get inner(): string;
   set inner(htmlStr: string);

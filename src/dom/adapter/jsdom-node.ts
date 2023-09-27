@@ -20,6 +20,13 @@ const isElement = (node) => {
   return NODE_TYPES[node.nodeType] === 'ELEMENT';
 }
 
+/**
+ * Remove internal tracking id from html string
+ */
+const scrubTrackId = (str: string) => {
+  return str.replaceAll(/\s?data-rid="[\d\w]+"\s?/g, '');
+}
+
 const default_pos = {
   startLine: null,
   startCol: 0
@@ -101,6 +108,10 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
 
     set outer(htmlStr) {
       _node.outerHTML = htmlStr;
+    },
+
+    get domString() {
+      return scrubTrackId(_node.outerHTML);
     },
 
     get inner() {

@@ -3,40 +3,41 @@ import { TransformTaskResult, TransformTaskResultsBuilder } from "./tasks.js";
 import { isEmpty, pick } from 'remeda';
 import { Change, diffLines, diffChars } from 'diff';
 
-const scrubId = (str: string) => {
-  return str.replaceAll(/\s?data-rid="[\d\w]+"\s?/g, '');
-}
-
-const diffHeader = (name: string) => {
-  console.log('[DIFF] '.grey + `(${name}):`.white);
-}
 
 abstract class DocumentChange {
-  #line_break = false
-  protected constructor(line_break = false) {
-    this.#line_break = line_break;
-  }
-
-  print() {
-    this.diff.forEach(part => {
+  public printDiff() {
+    let { label, newLines } = this.formatDiff();
+    console.log('[DIFF] '.grey + `(${label}):`.white);
+    this.changeDiff().forEach(part => {
       // green for additions, red for deletions grey for common parts
       const color = part.added ? 'green' : part.removed ? 'red' : 'grey';
       process.stderr.write('\t' + part.value[color]);
 
-      this.#line_break && process.stderr.write('\n');
+      newLines && process.stderr.write('\n');
     });
   }
 
-  protected abstract get diff(): Change[];
+  protected abstract changeDiff(): Change[];
+  protected abstract formatDiff(): { label: string, newLines: boolean }
 }
 
 class ReplaceAction extends DocumentChange {
-  constructor(before: AccessNode, after: AccessNode, name: string) {
+  constructor(
+    private before: AccessNode,
+    private after: AccessNode,
+    private taskname: string) {
     super();
   }
 
-  get diff(): Change[] {
-    return diffLines(scrubId(before), scrubId(after))
+  changeDiff() {
+    return diffLines(this.before.domString, this.after.domString);
+  }
+
+  formatDiff() {
+    return {
+      label: `${this.taskname} #${this.before.id} REPLACE-NODE`,
+      newLines: true
+    }
   }
 }
 

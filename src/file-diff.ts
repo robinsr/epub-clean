@@ -3,12 +3,7 @@ import * as process from 'process';
 import * as console from 'console';
 import { Change } from 'diff';
 
-/**
- * Remove data-rid from diff lines
- */
-const scrubId = (str: string) => {
-  return str.replaceAll(/\s?data-rid="[\d\w]+"\s?/g, '');
-}
+
 
 
 
