@@ -303,7 +303,5 @@ describe('DOM - selector', () => {
         expect(results.at(i)).to.eq(ex);
       });
     });
-
-
   });
 });

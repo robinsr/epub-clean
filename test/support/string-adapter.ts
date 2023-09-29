@@ -16,7 +16,17 @@ const HTMLStringAdapter = (fragment: string): Adapter => {
   return {
     getContents() {
       return htmlstring(fragment);
-    }
+    },
+
+    diffWith(u: string): void {
+    },
+
+    saveContents(c: string): void {
+    },
+
+    get target(): string {
+      return 'nowhere';
+    },
   }
 }
 

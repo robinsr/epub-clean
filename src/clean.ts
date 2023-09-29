@@ -1,13 +1,10 @@
-import { writeFileSync } from 'fs';
-import jsdom from 'jsdom';
-const { JSDOM } = jsdom;
 import FileAdapter from './dom/adapter/file-adapter.js';
 import JSDOMAdapter from './dom/adapter/jsdom-adapter.js';
 import TaskRunner from './tasks/task-runner.js';
-import { applog } from './log.js';
-import * as diff from './file-diff.js'
+import { applog as log } from './log.js';
+import { fileURLToPath } from 'node:url';
 
-const log = applog.getSubLogger({ name: 'clean' });
+
 
 declare global {
   interface CleanCmdOpts {
@@ -22,23 +19,26 @@ declare global {
 async function run(filename: string, opts: CleanCmdOpts) {
   console.time('clean');
 
-  const adapter = JSDOMAdapter(FileAdapter(filename));
+  let handle = FileAdapter(filename);
+  const adapter = JSDOMAdapter(handle);
   const taskRunner = TaskRunner(adapter, opts);
 
-  const modified_html = adapter.getContents().replace(/<body[\w\W]+<\/body>/, adapter.body);
+  const modified_html = handle.getContents().replace(/<body[\w\W]+<\/body>/, adapter.body);
 
   if (opts.fullDiff) {
-    diff.diffLines(adapter.getContents(), modified_html, 'All Changes');
+    handle.diffWith(modified_html);
   }
 
-  let file_out = filename;
   if (opts.debug) {
-    file_out = new URL('../test/test-output.html', import.meta.url).toString();
+
+    handle = FileAdapter(
+      fileURLToPath(new URL('../test/test-output.html', import.meta.url))
+    );
   }
 
   if (opts.dryrun) {
-    log.info(`Writing results to ${file_out}`);
-    writeFileSync(file_out, modified_html);
+    log.info(`Writing results to ${handle.target}`);
+    handle.saveContents(modified_html);
   }
   console.timeEnd('clean');
 }

@@ -1,19 +1,19 @@
-import result from './task-result.js';
+import { tasklog as log } from '../log.js';
+import { newResult } from './task-result.js';
 import {CommonTaskArgs, GroupElementsArgs, TransformTaskType} from './tasks.js';
 import {validators, taskSchema, validateSchema} from "./task-config.js";
 
 import {parseElementMap, mapNode} from "../dom/element-map.js";
 import {ParsedElementMap, parseSelector} from "../dom/index.js";
-import { tasklog } from "../log.js";
 import { parseSelectorV2 } from '../dom/selector.js';
 
 const task_name = 'group-elements';
 
-const log = tasklog.getSubLogger({ name: task_name });
+log.addContext('task', task_name);
 
 const argsSchema = {
   wrapper: validators.selector().withTag(),
-  map: validators.elementMap().default({ '*': '*' })
+  map: validators.elementMap().keys()
 }
 
 const validate = (args: GroupElementsArgs) => {
@@ -52,7 +52,7 @@ const GroupElements: TransformTaskType<GroupElementsArgs> = {
     },
     transform: (config, node, dom) => {
 
-      let r = result();
+      let r = newResult(`${config.name} (${task_name})`);
 
       if (!dom.contains(node)) {
         log.info('node no longer exists. bailing');

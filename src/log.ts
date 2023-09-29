@@ -1,13 +1,20 @@
 import { stdout } from 'node:process';
 import { inspect } from 'node:util';
+import { basename } from 'node:path';
 import colors from 'colors';
 import * as R from 'remeda';
-//import { install as enableSrcMap } from 'source-map-support';
+import log4js from 'log4js';
+import { LoggingEvent } from 'log4js';
+import { callerFn, getSourceTS }  from './caller.js';
+import { install } from 'source-map-support'
 
-// TODO toggle this somehow
-//enableSrcMap();
+install();
 
-import callerFn from './caller.js';
+import { config } from '@app-config/main';
+
+let appconfig_loglevel = config.logging.log_level;
+
+
 const caller = callerFn(import.meta.url);
 
 const json_options = {
@@ -22,140 +29,119 @@ const json = (obj: any): string => {
   return obj;
 }
 
-enum log_level {
-  silly = 6,
-  trace = 5,
-  debug = 4,
-  info = 3,
-  warn = 2,
-  error = 1,
-  fatal = 0
-}
-
 interface display_config {
   [key: string | number]: {
+    order: number;
     prefix: string;
     theme: string | string[];
   }
 }
 
 const log_display: display_config = {
-  [log_level.trace]: { prefix: '[TRACE]', theme: 'gray' },
-  [log_level.debug]: { prefix: '[DEBUG]', theme: 'brightMagenta' },
-  [log_level.info]: { prefix: '[INFO]', theme: 'cyan' },
-  [log_level.warn]: { prefix: '[WARN]', theme: 'yellow' },
-  [log_level.error]: { prefix: '[ERROR]', theme: [ 'red', 'bold' ] },
-  [log_level.fatal]: { prefix: '[FATAL]', theme: [ 'red', 'inverse' ] },
-  'added': { prefix: '', theme: 'green' },
-  'removed': { prefix: '', theme: 'red' },
-  'success': { prefix: '[OK]', theme: [ 'green', 'inverse'] },
-  'default': { prefix: '[LOG]', theme: [ 'blue', 'dim'] },
+  'trace': { order: 5000, prefix: '[TRACE]', theme: 'gray' },
+  'debug': { order: 10000, prefix: '[DEBUG]', theme: 'brightMagenta' },
+  'info': { order: 20000, prefix: '[INFO]', theme: 'cyan' },
+  'warn': { order: 30000, prefix: '[WARN]', theme: 'yellow' },
+  'error': { order: 40000, prefix: '[ERROR]', theme: [ 'red', 'bold' ] },
+  'fatal': { order: 50000, prefix: '[FATAL]', theme: [ 'red', 'inverse' ] },
+  'diff': { order: 20000, prefix: '[DIFF]', theme: 'gray' },
+  'added': { order: 55000, prefix: 'added:', theme: 'green' },
+  'removed': { order: 55000, prefix: 'removed:', theme: 'red' },
+  'success': { order: 55000, prefix: '[OK]', theme: [ 'green', 'inverse'] },
+  'default': { order: 20000, prefix: '[LOG]', theme: [ 'blue', 'dim'] },
+  'off': { order: Number.MAX_VALUE, prefix: '', theme: 'gray' },
 }
 
 let themeMap = R.pipe(log_display,
-  R.mapKeys((key) => log_level[key] || key ),
   R.mapValues((val) => val.theme)
+);
+
+let orderMap = R.pipe(log_display,
+  R.mapValues((val) => ({ value: val.order, colour: 'cyan' }))
 );
 
 colors.setTheme(themeMap);
 
-interface LogConfig {
-  name?: string;
-  level?: log_level;
-  parent?: Logger;
-}
 
-export class Logger {
-  name: string;
-  level: log_level;
-  parent: Logger
-  #stream: NodeJS.WritableStream = stdout;
+log4js.addLayout('console_layout', config => (l: LoggingEvent) => {
+  let level = l.level.levelStr;
+  let level_config = log_display[level.toLowerCase()];
+  let color_code = level.toLowerCase() || 'default';
+  //console.log(json(l));
 
-  constructor(props: LogConfig) {
-    Object.assign(this, {name: '$', level: log_level.info }, props);
-    this.name = props.name || this.name;
-    this.parent = props.parent;
+  let source = getSourceTS({
+    source: l.fileName,
+    line: l.lineNumber,
+    column: l.columnNumber
+  });
 
-    let parent_levels = [];
-    let p = this.parent;
-    while (p !== undefined) {
-      parent_levels.push(p.level);
-      p = p.parent;
-    }
+  return [
+    level_config.prefix[color_code],
+    colors.gray(`(${l.categoryName}) ${basename(source.source)}:${source.line}:`),
+    l.data.flat().map(json).join(' ')
+  ].join(' ');
+});
 
-    this.level = Math.min(...parent_levels, props.level);
-  }
+const log4js_category = (level) => ({
+  appenders: [ 'console' ], level, enableCallStack: true
+});
 
-  private checkLevel(level: log_level) {
-    return level <= this.level;
-  }
+const log4js_config = {
+  levels: orderMap,
+  appenders: {
+    console: { type: 'console', layout: { type: 'console_layout' } },
+    stdout: { type: 'stdout' }
+  },
+  categories: {
+    'default': log4js_category('error'),
+    'main': log4js_category(appconfig_loglevel),
+    'main.app': log4js_category(appconfig_loglevel),
+    'main.task': log4js_category(appconfig_loglevel),
+    'main.dom': log4js_category(appconfig_loglevel),
+    'diff': { appenders: [ 'stdout' ], level: 'error' },
+  },
+};
 
-  private prefix(level: log_level | string, label?: string): string {
-    let { prefix } = log_display[level];
-    let color_code = log_level[level] || level || 'default';
+log4js.configure(log4js_config);
 
-    return [
-      `${prefix}`[color_code],
-      colors.grey(`(${this.name}) ${label || caller()}:`)
-    ].join(' ');
-  }
+const applog = log4js.getLogger('main.app');
+const tasklog = log4js.getLogger('main.task');
+const domlog = log4js.getLogger('main.dom');
 
-  private emit(...msg: any[]) {
-    this.#stream.write([
-      this.prefix(log_level.debug, '(internal)'), msg.map(json).join(' '), '\n'
-    ].join(' '));
-  }
+applog.info(log4js_config);
 
-  private baseLogFunc(level: log_level | string, ...msg: any[]): void {
-    if (typeof level !== 'string') {
-      if (!this.checkLevel(level)) return;
-    }
 
-    this.#stream.write([
-      this.prefix(level), msg.map(json).join(' '), '\n'
-    ].join(' '));
-  }
+class DiffLogger {
+  protected out_stream: NodeJS.WritableStream = stdout;
 
-  log(...msg: any[]) {
-    this.baseLogFunc('default', ...msg);
+  protected emit(...msg: any[]) {
+    this.out_stream.write(msg.join(' '));
   }
 
   info(...msg: any[]) {
-    this.baseLogFunc(log_level.info, ...msg);
+    this.emit(...[ ...msg, '\n']);
   }
 
-  warn(...msg: any[]) {
-    this.baseLogFunc(log_level.warn, ...msg);
-  }
-
-  error(...msg: any[]) {
-    this.baseLogFunc(log_level.error, ...msg);
-  }
-
-  debug(...msg: any[]) {
-    this.baseLogFunc(log_level.debug, ...msg);
-  }
-
-  fatal(...msg: any[]) {
-    this.baseLogFunc(log_level.fatal, ...msg);
-  }
-
-  success(...msg: any[]) {
-    this.baseLogFunc('success', ...msg);
-  }
-
-  getSubLogger(config: LogConfig): Logger {
-    return new Logger({
-      name: `${this.name}:${config.name}`,
-      level: config.level || this.level,
-      parent: this
-    })
+  write(buffer: Uint8Array | string) {
+    this.out_stream.write(buffer)
   }
 }
 
-const base = new Logger({ level: log_level.debug });
-const applog = base.getSubLogger({ name: 'CMD', level: log_level.info });
-const tasklog = base.getSubLogger({ name: 'TASKS', level: log_level.warn });
-const domlog  = base.getSubLogger({ name: 'DOM', level: log_level.error });
+const difflog = new DiffLogger();
 
-export { applog as default, applog, tasklog, domlog };
+export { applog as default, applog, tasklog, difflog, domlog };
+
+
+// applog.log('trace', { prefix: '[TRACE]', theme: 'gray' });
+// applog.log('debug', { prefix: '[DEBUG]', theme: 'brightMagenta' });
+// applog.log('info', { prefix: '[INFO]', theme: 'cyan' });
+// applog.log('warn', { prefix: '[WARN]', theme: 'yellow' });
+// applog.log('error', { prefix: '[ERROR]', theme: [ 'red', 'bold' ] });
+// applog.log('fatal', { prefix: '[FATAL]', theme: [ 'red', 'inverse' ] });
+// applog.log('diff', { prefix: '[DIFF]', theme: 'gray' });
+// applog.log('added', { prefix: '', theme: 'green' });
+// applog.log('removed', { prefix: '', theme: 'red' });
+// applog.log('success', { prefix: '[OK]', theme: [ 'green', 'inverse'] });
+// applog.log('default', { prefix: '[LOG]', theme: [ 'blue', 'dim'] });
+//
+// process.exit(1)

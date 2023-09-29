@@ -29,7 +29,7 @@
     "attrs": [ 
       {
         "op": "regex",
-        "attribute": "class",
+        "attr": "class",
         "values": [ "\\s?calibre[\\d]\\s?", "" ]
       }
     ]
@@ -47,7 +47,7 @@
     "attrs": [ 
       {
         "op": "add",
-        "attribute": "epub:type",
+        "attr": "epub:type",
         "value": "bodymatter"
       }
     ]
@@ -58,7 +58,7 @@
     "attrs": [ 
       {
         "op": "remove",
-        "attribute": "style"
+        "attr": "style"
       }
     ]
   }, {

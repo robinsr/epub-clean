@@ -5,6 +5,7 @@ import {
   ElementMap,
   ParsedElementMap
 } from "../dom/index.js";
+import TaskResult from './task-result.js';
 
 
 export interface CommonTaskArgs {
@@ -88,27 +89,7 @@ export interface ParsedTask<C> extends TaskDefinition<any, C> {
 }
 
 export interface TransformFunction<C> {
-  (config: C, node: AccessNode, dom: DomAdapter): TransformTaskResult;
-}
-
-export type RemoveResult = AccessNode;
-export type ReplaceResult = [AccessNode, AccessNode];
-export type InnerHTMLResult = string;
-
-export interface TransformTaskResult {
-  noChange: boolean;
-  error: string;
-  remove: Array<RemoveResult>;
-  replace: Array<ReplaceResult>;
-  html: InnerHTMLResult;
-}
-
-export interface TransformTaskResultsBuilder {
-  remove: (node: AccessNode) => TransformTaskResultsBuilder;
-  replace: (oldNode: AccessNode, newNode: AccessNode) => TransformTaskResultsBuilder;
-  html: (html: string) => TransformTaskResultsBuilder;
-  final: () => TransformTaskResult
-  error: (err: string) => TransformTaskResult;
+  (config: C, node: AccessNode, dom: DomAdapter): TaskResult;
 }
 
 export interface VoidDomFunction {

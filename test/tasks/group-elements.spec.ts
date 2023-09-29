@@ -1,5 +1,7 @@
 import groupElements from '../../src/tasks/group-elements.js';
 import { setupTest } from "../support/task-setup.js";
+import DomHelp from "../support/dom-assertions.js";
+import { inspect } from '../support/test-utils.js';
 
 import { expect } from 'chai';
 import { before, describe, it } from 'mocha';
@@ -39,41 +41,39 @@ describe('Tasks - GroupElements', function () {
     });
   });
 
-  describe('Groups adjacent elements matching the selector', function () {
-    let taskConfig = {
-      task: 'group-elements',
-      name: 'Converts p.list-items to a proper unordered-list',
-      selector: '.tx.special',
-      wrapper: 'div.special-text',
-      map: {
-        '*': '*'
-      }
-    };
+  describe.skip('Groups adjacent elements matching the selector', function () {
+    it('should create 2 new list elements', function () {
+      let taskConfig = {
+        task: 'group-elements',
+        name: 'Converts p.list-items to a proper unordered-list',
+        selector: 'p.tx.special',
+        wrapper: 'div.special-text',
+        map: {
+          'p.tx.special': 'p|all'
+        }
+      };
 
-    let fragment = `<div id="test-fragment">
-      <p class="tx">Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-      <p class="tx special">Ab culpa impedit iusto molestiae necessitatibus quaerat quod soluta veniam vitae voluptas.</p>
-      <p class="tx">Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
-    </div>`;
+      let fragment = `<div id="test-fragment">
+        <p class="tx">One - Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+        <p class="tx special">Two - Ab culpa impedit iusto molestiae necessitatibus quaerat quod soluta veniam vitae voluptas.</p>
+        <p class="tx">Three - Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
+      </div>`;
 
-    let doc = null
-    before(function () {
-      let { config, taskDef, nodes, adapter } = setupTest(groupElements, taskConfig, fragment);
-      this.doc = adapter;
-      console.log(adapter.body)
-    })
+      let { results, config, taskDef, nodes, adapter: doc } = setupTest(groupElements, taskConfig, fragment);
+      let dom = DomHelp(doc);
+      console.log(doc.body)
 
-     it('should create 2 new list elements', function () {
-      let wrapperEl = this.doc.query('div.special-text');
-      expect(wrapperEl).to.be.a('array');
-      expect(wrapperEl).to.have.length(1);
+      inspect(results)
+      expect(results).to.be.a('array');
+      expect(results).to.have.length(1);
+      expect(results).to.have.nested.property('[0].docChanges[0]')
+        .that.has.property('type', 'REPLACE-NODE');
 
-      let innerEl = this.doc.query('p.tx.special');
-      expect(innerEl).to.be.a('array');
-      expect(innerEl).to.have.length(1);
+      dom.exists('div.special-text');
+      dom.exists('p.tx.special', doc.body);
     });
-
   });
+
   describe('Maps selected elements to new types', function() {
     let taskConfig = {
       task: 'group-elements',

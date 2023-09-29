@@ -36,7 +36,7 @@ export const mapNode = (
 
   let attrs = Object.entries(node.attrs)
     .filter(([k, v]) => k !== 'class')
-    .reduce((acc, [k,v]) => acc + `${k}="${v}"`, ' ');
+    .reduce((acc, [k,v]) => acc + ` ${k}="${v}"`, '');
 
   let classString = newClss.length ? ` class="${newClss.join(' ')}"` : "";
 

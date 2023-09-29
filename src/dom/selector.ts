@@ -1,4 +1,4 @@
-import { domlog } from '../log.js'
+import { domlog as log } from '../log.js'
 import { ParsedSelectorString } from './dom.js';
 import jsdom from 'jsdom';
 import * as spec from 'specificity';
@@ -12,8 +12,6 @@ import {
   toPlainObject,
   TypeSelector,
 } from 'css-tree';
-
-const log = domlog.getSubLogger({ name: 'selector' });
 
 
 const { JSDOM } = jsdom;
@@ -123,6 +121,7 @@ export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
   try {
     let tree = toPlainObject(parse(removeNamespaces(selector), { context }));
     log.info(tree);
+    console.log(tree);
 
     let type: string, children: CssNodePlain[], p: ParsedSelectorString;
 

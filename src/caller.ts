@@ -3,12 +3,23 @@ import callsites from 'callsites';
 import { mapSourcePosition } from 'source-map-support';
 
 
-const caller = (this_file: string) => {
+interface Position {
+  source: string;
+  line: number;
+  column: number;
+}
+
+export const getSourceTS = (pos: Position) => {
+  return mapSourcePosition(pos);
+}
+
+export const callerFn = (this_file: string) => {
   const dir_name = dirname(this_file);
-  return (): string => {
+  return (pos?: Position): string => {
+
     let cs = callsites();
     let caller = cs.find(cs => {
-      return cs.getFileName() !== this_file;
+      return ![ this_file, import.meta.url ].includes(cs.getFileName())
     })
 
     if (!caller) {
@@ -21,12 +32,10 @@ const caller = (this_file: string) => {
       column: caller.getColumnNumber()
     }
 
-    let src_map = mapSourcePosition(position);
+    let src_map = getSourceTS(position);
     let line_no = src_map ? src_map.line : position.line;
     let name = src_map ? basename(src_map.source) : position.source.replace(dir_name, '');
 
     return name + ':' + line_no;
   }
 }
-
-export default caller;

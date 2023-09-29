@@ -1,11 +1,12 @@
-import Joi, { ObjectSchema } from 'joi';
+import Joi, { ObjectSchema, ArraySchema } from 'joi';
+
+import { tasklog as log } from '../log.js';
 
 import { ValidationResult } from "./tasks.js";
 import { isValidSelector, parseSelector } from '../dom/index.js';
-import { tasklog } from "../log.js";
 import { parseSelectorV2 } from '../dom/selector.js';
 
-const log = tasklog.getSubLogger({ name: 'config' });
+log.addContext('task', 'task-config');
 
 const JOI_OPTS = {
   abortEarly: false,
@@ -17,50 +18,67 @@ const point = str =>  `\u2B95 ${str} \u2B05`;
 const selectorMsgs = {
   'object.unknown': `Invalid CSS selector in mapping: [ ${point('{#key}')} : {#value} ]`,
   'selector.invalid': `Invalid CSS selector in mapping: [ {#key} : ${point('{#value}')} ]`,
-  'selector.needsTag': '{#label} {:#value} requires type selector'
+  'selector.needsTag': '{#label} {:#value} requires type selector',
+  'selector.sibling': '{#label} {:#value} is a sibling selector. Good Job!'
 };
 
-const customJoi = Joi.extend((joi) => {
-  return {
-    type: 'selector',
-    base: joi.string(),
-    messages: Object.assign({}, selectorMsgs, {
-      'selector.invalid': '{#label} {:#value} is not a valid CSS selector'
-    }),
-    validate(value, helpers) {
-
-      if (!isValidSelector(value)){
-        return { value, errors: helpers.error('selector.invalid') }
-      }
-
-      if (helpers.schema.$_getFlag('required-tag')) {
-        let p = parseSelectorV2(value);
-        if (!p.tag) return { value, errors: helpers.error('selector.needsTag') };
-      }
-
-      return null;
-    },
-    rules: {
-      withTag: {
-        alias: 'withElement',
-        method() {
-          return this.$_setFlag('required-tag', true);
-        }
-      },
-      simple: {
-        alias: 'noComplex',
-        method() {
-          return this.$_setFlag('only-simple', true);
-        }
-      }
+const selector_type = (joi): Joi.Extension => ({
+  type: 'selector',
+  base: Joi.string(),
+  messages: Object.assign({}, selectorMsgs, {
+    'selector.invalid': '{#label} {:#value} is not a valid CSS selector'
+  }),
+  validate(value, helpers) {
+    if (helpers.schema.$_getFlag('allow-siblings')) {
+      let p = parseSelectorV2(value);
+      console.log(p)
+      return { value, errors: helpers.error('selector.sibling') }
     }
+
+    if (helpers.schema.$_getFlag('tag-required')) {
+      let p = parseSelectorV2(value);
+      if (!p.tag) return { value, errors: helpers.error('selector.needsTag') };
+    }
+
+    if (!isValidSelector(value)){
+      return { value, errors: helpers.error('selector.invalid') }
+    }
+
+    return null;
+  },
+  rules: {
+    withTag: {
+      alias: 'withElement',
+      method() {
+        return this.$_setFlag('tag-required', true);
+      }
+    },
+    simple: {
+      alias: 'noComplex',
+      method() {
+        return this.$_setFlag('only-simple', true);
+      }
+    },
+    adjacentOk: {
+      alias: 'siblings',
+      method() {
+        return this.$_setFlag('allow-siblings', true);
+      }
+    },
   }
 });
 
+// TODO Maybe
+const sibling_selector: Joi.Extension = {
+  type: 'adjSibling',
+}
+
+const custom_validators = Joi.extend(selector_type);
+
 const elementMap = () => Joi.object({})
         .pattern(
-          customJoi.selector(),
-          customJoi.selector())
+          custom_validators.selector(),
+          custom_validators.selector())
         // default object.unknown message is -> "XYZ" is not allowed;
         .messages(selectorMsgs);
 
@@ -78,15 +96,15 @@ export const validators = {
     arr: (l: number) => Joi.array().length(l)
   }),
   oneOf: (...values) => Joi.any().valid(...values).required(),
-  selector: () => customJoi.selector().required(),
+  selector: () => custom_validators.selector().required(),
   elementMap: elementMap,
   object: (...args: any[]) => Joi.object(...args),
   array: () => Joi.array()
 }
 
 export const taskSchema = Joi.object({
-  name: Joi.string().required().label('Task Name'),
-  selector: customJoi.selector(),
+  name: Joi.string().required(),
+  selector: custom_validators.selector(),
   task: Joi.any().valid(
     'amend-attrs', 'change-case', 'group-elements',
     'map-elements','remove-elements'
@@ -94,7 +112,7 @@ export const taskSchema = Joi.object({
 });
 
 export const validateSchema = (
-  schema: ObjectSchema,
+  schema: ObjectSchema | ArraySchema,
   args: object,
   label: string = "Unknown"
 ): ValidationResult | null => {

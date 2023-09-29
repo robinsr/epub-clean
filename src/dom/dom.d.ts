@@ -1,5 +1,6 @@
 import { NODE_TYPES } from './adapter/node.js';
 import { Optional } from "typescript-optional";
+import * as util from 'node:util';
 
 export type CSSSelectorString = string;
 export type CSSClassName = string;
@@ -37,25 +38,35 @@ export type HTMLBodyContents = string;
 export type DomString = string;
 
 export interface Adapter {
-  getContents: () => HTMLFileContents;
+  getContents(): HTMLFileContents;
+  saveContents(c: string): void;
+  diffWith(u: string): void;
+  get target(): string;
 }
 
-export interface DomAdapter extends Adapter {
+export interface DomAdapter {
   get body(): HTMLBodyContents;
   query: (selector: CSSSelectorString) => AccessNode[];
   first: (selector: CSSSelectorString) => AccessNode;
   get: (id: string) => AccessNode;
   contains: (node: AccessNode) => boolean;
   newNode: (str: DomString) => AccessNode;
+  clean(): void;
 }
 
 export interface NodeLocation {
   startCol: number;
+  startLine: number;
 }
 
 export type NodeFormatOptions = 'full' | 'diff';
 
-export interface DomNode {
+interface Debuggable {
+  inspect(depth, opts): string;
+  [util.inspect.custom](depth, opts): string;
+}
+
+export interface DomNode extends Debuggable {
   get node(): HTMLElement;
   get id(): string;
   setId(str: string): void

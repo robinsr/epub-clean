@@ -5,11 +5,11 @@ import {
 } from "../../src/dom/index.js";
 import {
   TaskDefinition,
-  TransformTaskResult,
   TransformTaskType
 } from "../../src/tasks/tasks.js";
 
 import StringAdapter from "./string-adapter.js";
+import TaskResult from '../../src/tasks/task-result.js';
 
 
 interface SetupResult {
@@ -17,7 +17,7 @@ interface SetupResult {
   adapter: DomAdapter;
   nodes: AccessNode[];
   taskDef: TaskDefinition<any>;
-  results: TransformTaskResult[]
+  results: TaskResult[]
 }
 
 export const setupTest = (
@@ -33,13 +33,8 @@ export const setupTest = (
   let results = nodes.map(n => {
     let results = taskDef.transform(config, n, adapter);
 
-    results.replace.forEach(([ oldNode, newNode ]) => {
-      oldNode = adapter.get(oldNode.id);
-      oldNode.replace(newNode);
-    });
-
-    results.remove.forEach(node => {
-      node.remove();
+    results.docChanges.forEach(change => {
+      change.applyChange(adapter);
     });
 
     return results;

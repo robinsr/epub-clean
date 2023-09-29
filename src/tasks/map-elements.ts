@@ -1,6 +1,5 @@
-import { tasklog } from './../log.js';
+import { tasklog as log } from '../log.js';
 import {
-  TransformTaskResult,
   TransformFunction,
   TransformTaskType,
   MapElementsArgs,
@@ -13,12 +12,12 @@ import {
   taskSchema
 } from './task-config.js'
 import { parseElementMap, mapNode } from "../dom/element-map.js";
-import result from './task-result.js';
+import { newResult } from './task-result.js';
 
 
 const TASK_NAME = 'map-elements';
 
-const log = tasklog.getSubLogger({ name: TASK_NAME });
+log.addContext('task', TASK_NAME);
 
 const argsSchema = {
   map: validators.elementMap()
@@ -35,7 +34,8 @@ const parse = (args: MapElementsArgs): MapElementsConfig => {
   return { ...args, mapKeys, map };
 }
 
-const transform: TransformFunction<MapElementsConfig> = (config, node, dom): TransformTaskResult => {
+const transform: TransformFunction<MapElementsConfig> = (config, node, dom) => {
+  let r = newResult(`${config.name} (${TASK_NAME})`);
   let { mapKeys, map } = config;
 
   let matchKey = mapKeys.find(key => node.matches(key));
@@ -43,7 +43,7 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
   log.debug(`elem matches "${matchKey}"?:`);
 
   if (!matchKey) {
-    return result().error(`No transform key found for element ${node.selector}`);
+    return r.error(`No transform key found for element ${node.selector}`);
   }
 
   let matchProps = map[matchKey].from;
@@ -56,7 +56,7 @@ const transform: TransformFunction<MapElementsConfig> = (config, node, dom): Tra
 
   let newNode = dom.newNode(mapNode(node, matchProps, newProps));
 
-  return result().replace(node, newNode).final();
+  return r.replace(node, newNode).final();
 }
 
 

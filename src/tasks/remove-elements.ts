@@ -1,6 +1,6 @@
 import { RemoveElementsArgs, TransformTaskType } from './tasks.js';
 import { taskSchema,validateSchema, validators } from './task-config.js';
-import result from './task-result.js';
+import { newResult } from './task-result.js';
 
 const TASK_NAME = 'remove-elements';
 
@@ -15,10 +15,11 @@ const validate = (args: RemoveElementsArgs) => {
 const parse = (args: RemoveElementsArgs): RemoveElementsArgs => args;
 
 const transform = (config, node) => {
+  let r = newResult(`${config.name} (${TASK_NAME})`);
   if (config.content) {
-    return result().html(node.inner).final();
+    return r.modify(node, node.inner).final();
   } else {
-    return result().remove(node).final();
+    return r.remove(node).final();
   }
 }
 

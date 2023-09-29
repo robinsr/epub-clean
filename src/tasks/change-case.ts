@@ -1,12 +1,12 @@
 import { DomNode } from '../dom/index.js';
 import { walkTree } from './task-utils.js';
-import result from './task-result.js';
+import { newResult } from './task-result.js';
 import { validators, taskSchema, validateSchema } from './task-config.js';
 import {
   ChangeCaseArgs,
   TransformFunction,
-  TransformTaskResult,
-  TransformTaskType, ValidationResult,
+  TransformTaskType,
+  ValidationResult,
   VoidDomFunction
 } from "./tasks.js";
 
@@ -38,14 +38,16 @@ const validate = (args: ChangeCaseArgs): ValidationResult => {
   return validateSchema(taskSchema.append(changeCaseSchema), args, TASK_NAME);
 }
 
-const parse = (args: ChangeCaseArgs): VoidDomFunction => {
-  return transformMap[args.case];
-};
+const parse = (args: ChangeCaseArgs): ChangeCaseArgs => args;
 
-const transform: TransformFunction<VoidDomFunction> = (textFunc, node): TransformTaskResult => {
+const transform: TransformFunction<ChangeCaseArgs> = (config, node) => {
+
+  let textFunc = transformMap[config.case];
+
+  let r = newResult(`${config.name} (${TASK_NAME})`);
 
   if (!node.text) {
-    return result().error('Node contains no text');
+    return r.error('Node contains no text');
   }
 
   let newNode = node.clone();
@@ -57,13 +59,13 @@ const transform: TransformFunction<VoidDomFunction> = (textFunc, node): Transfor
   }
 
   if (node.text === newNode.text) {
-    return result().error('No text changed');
+    return r.error('No text changed');
   }
 
-  return result().html(newNode.inner).final();
+  return r.modify(node, newNode).final();
 }
 
-const ChangeCase: TransformTaskType<ChangeCaseArgs, VoidDomFunction> = {
+const ChangeCase: TransformTaskType<ChangeCaseArgs, ChangeCaseArgs> = {
   type: TASK_NAME,
   configure: (config) => {
     let { name, selector } = config;

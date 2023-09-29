@@ -1,4 +1,5 @@
-import { domlog } from '../../log.js';
+import * as util from 'node:util';
+import { domlog as log } from '../../log.js';
 
 import ShortUniqueId from 'short-unique-id';
 import { Optional } from "typescript-optional";
@@ -7,9 +8,6 @@ import jsdom from 'jsdom';
 import Tag from '../tag.js';
 import { NODE_TYPES } from './node.js';
 import { AccessNode, DomNode } from '../dom.js';
-
-
-const log = domlog.getSubLogger({ name: 'selector' });
 
 const short = new ShortUniqueId.default({ length: 8 })
 const uuid = () => {
@@ -50,6 +48,13 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
   }
 
   let accessors: DomNode = {
+    inspect() {
+      return this.tagSummary;
+    },
+    [util.inspect.custom]() {
+      return this.tagSummary;
+    },
+
     get node() {
       return _node;
     },

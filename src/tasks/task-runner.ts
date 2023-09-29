@@ -1,20 +1,35 @@
 import { existsSync, readFileSync } from 'fs';
-import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
-import { Adapter, DomAdapter } from '../dom/index.js';
-import { diffChars, diffLines, applog } from '../log.js';
-import getTask from './index.js';
-import { isEmpty } from 'remeda';
-import { CleanCmdOpts } from '../clean.js';
+import { isEmpty, noop } from 'remeda';
 import * as process from 'process';
 
-const log = applog.getSubLogger({ name: 'task-runner' });
+import { applog as log } from '../log.js';
+import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
+import { Adapter, DomAdapter } from '../dom/index.js';
+import getTask from './index.js';
+import { taskSchema, validateSchema, validators } from './task-config.js';
+
+log.addContext('task', 'task-runner');
+
+
+const configSchema = validators.array().items(taskSchema.unknown(true));
 
 const getConfig = (filename: string): ConfigFile  => {
   if (!existsSync(filename)) {
     throw new Error('Config file not found');
   }
 
-  return JSON.parse(readFileSync(filename, 'utf8'));
+  let config = JSON.parse(readFileSync(filename, 'utf8'));
+  let configErrors = validateSchema(configSchema, config);
+
+  if (configErrors) {
+    Object.values(configErrors)
+      .map(e => e.message)
+      .forEach(e => log.error(e));
+
+    process.exit(1);
+  }
+
+  return config;
 }
 
 const parseTaskConfig = (args: TaskArgs): ParsedTask<any> => {
@@ -67,10 +82,7 @@ const taskLogger = (t: ParsedTask<any>) => {
 
 const TaskRunner = (adapter: DomAdapter, opts: CleanCmdOpts) => {
   const config = getConfig(opts.config.toString());
-
-
-  
-  let tasks = config.map(parseTaskConfig)
+  let tasks = config.map(parseTaskConfig);
 
   let errors = tasks.reduce((acc, task) => {
       if (task.errors) {
@@ -90,9 +102,10 @@ const TaskRunner = (adapter: DomAdapter, opts: CleanCmdOpts) => {
     .map(task => queryTargetsForTask(task, adapter))
     .filter(task => task.targets.length > 0);
 
-  global.__opts.targets && log.info('Resolved tasks:', tasks.map(taskLogger));
-
-  process.exit(1);
+  if (opts.targets) {
+    log.info('Resolved tasks:', tasks.map(taskLogger));
+    process.exit(1);
+  }
 
   tasks.forEach(task => {
     log.info(`Starting task: "${task.name}"`);
@@ -107,38 +120,21 @@ const TaskRunner = (adapter: DomAdapter, opts: CleanCmdOpts) => {
       }
 
       if (result.noChange) {
-        log.warn(`No change for task: ${task.name}:${node.location}`);
+        log.warn(`No change for task: "${task.name}" (line: ${node.location.startLine})`);
       }
 
-      if (result.replace) {
-        result.replace.forEach(([ oldNode, newNode ]) => {
-          oldNode = adapter.get(oldNode.id);
-          diffLines(oldNode.outer, newNode.outer, `${task.name} #${node.id} REPLACE-NODE`);
-          oldNode.replace(newNode);
-        });
+      const applyChange = action => {
+        action.printDiff();
+        action.applyChange(adapter);
       }
 
-      if (result.remove) {
-        result.remove.forEach(node => {
-          diffChars(node.outer, '', `${task.name} #${node.id} REMOVE-NODE`);
-          node.remove();
-        });
-      }
-
-      if (result.html) {
-        diffLines(node.outer, result.html, `${task.name} #${node.id} INNER-HTML`);
-        node.inner = result.html;
-      }
+      result.modify.forEach(applyChange);
+      result.replace.forEach(applyChange);
+      result.remove.forEach(applyChange);
     });
   });
 
-  adapter.query('[data-rid]').forEach(n => {
-    n.removeAttr('data-rid');
-  });
-
-  adapter.query('').forEach(n => {
-    n.removeAttr('data-rid');
-  });
+  adapter.clean();
 
   return this;
 }

@@ -1,8 +1,10 @@
-import { consola } from 'consola';
+
+
+global.__opts = { log_level: 1 }
 
 export const mochaHooks = {
-  beforeAll() {
-    consola.level = -999;
+  beforeEach() {
+    //consola.level = -999;
     //consola.level = 4;
   }
 };

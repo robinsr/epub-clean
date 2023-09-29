@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
+    "config": "npx @app-config/cli generate",
     "test": "mocha",
     "watch": "mocha --watch --watch-file *.ts",
     "clean": "rm -rf build",
@@ -20,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@app-config/main": "^2.8.7",
     "callsites": "^4.1.0",
     "colors": "^1.4.0",
     "commander": "^11.0.0",
@@ -28,6 +30,8 @@
     "html-format": "^1.1.2",
     "joi": "^17.10.2",
     "jsdom": "^22.1.0",
+    "json5": "^2.2.3",
+    "log4js": "^6.9.1",
     "remeda": "^1.27.0",
     "short-unique-id": "^5.0.2",
     "short-uuid": "^4.2.2",

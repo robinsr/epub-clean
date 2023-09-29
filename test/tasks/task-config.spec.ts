@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import {before, describe, it} from 'mocha';
+import { logContext, wrapErrCtx } from '../support/test-utils.js'
 
 import { taskSchema, validators, validateSchema } from '../../src/tasks/task-config.js';
 
@@ -55,46 +56,82 @@ describe('Tasks - task-config', function() {
   });
 
   describe('#validators.selector', function() {
-    it('should accept css selectors', function () {
-      let schema = validators.object({
-        vals: validators.array().items(validators.selector())
+    describe('with default settings', function () {
+      it('should accept css selectors', function (done) {
+        let schema = validators.object({
+          vals: validators.array().items(validators.selector())
+        });
+
+        let valid_sels = {
+          vals: [
+            '.some-class',
+            'p.thing',
+            'div > ul > li:first-child',
+            '&&invalid&&',
+            '+ .some-sibling'
+          ]
+        }
+
+        let errors = validateSchema(schema, valid_sels, 'mocha-test');
+        wrapErrCtx(this.test, errors, done, () => {
+          expect(errors).to.be.a('object');
+          expect(errors, 'more errors returned than expected').to.have.all.keys('3', '4');
+          expect(errors).to.have.nested.property('3.problem').to.eq('selector.invalid');
+          expect(errors).to.have.nested.property('4.problem').to.eq('selector.invalid');
+        });
       });
+    })
 
-      let valid_sels = {
-        vals: [ '.some-class', 'p.thing', 'div > ul > li:first-child', '&&invalid&&' ]
-      }
+    describe('using "withTag" option', function () {
+      it('should require a html tag as part of the selector', function (done) {
+        let schema = validators.object({
+          vals: validators.array().items(validators.selector().withTag())
+        });
 
-      let errors = validateSchema(schema, valid_sels, 'mocha-test');
-      //console.log(errors)
-      //errors.ex = { message: 'i am extra', value: '', problem: 'extra-error' }
-      expect(errors).to.be.a('object');
-      expect(errors, 'more errors returned than expected').to.have.all.keys('3');
-      expect(errors).to.have.nested.property('3.problem').to.eq('selector.invalid');
+        let valid_sels = {
+          vals: [
+            '.some-class',
+            'p.thing',
+            'div > ul > li:first-child',
+            '^^invalid^^',
+            'h1, h2, h3'
+          ]
+        }
+
+        let errors = validateSchema(schema, valid_sels, 'mocha-test');
+        wrapErrCtx(this.test, errors, done, () => {
+          expect(errors).to.be.a('object');
+          expect(errors, 'more errors returned than expected').to.have.all.keys('0', '3');
+          expect(errors).to.have.nested.property('0.problem').to.eq('selector.needsTag');
+        });
+      });
     });
 
-    it('should require a html tag as part of the selector', function () {
-      let schema = validators.object({
-        vals: validators.array().items(validators.selector().withTag())
+    describe('using "adjacentOk"', function () {
+      it('should require a html tag as part of the selector', function (done) {
+        let schema = validators.object({
+          vals: validators.array().items(validators.selector().adjacentOk())
+        });
+
+        let valid_sels = {
+          vals: [
+            '.some-class',
+            '+ p.this',
+            '~ div.that',
+            '^^invalid^^',
+            '> p.the-other-things'
+          ]
+        }
+
+        let errors = validateSchema(schema, valid_sels, 'mocha-test');
+        wrapErrCtx(this.test, errors, done, () => {
+          expect(errors).to.be.a('object');
+          expect(errors, 'more errors returned than expected').to.have.all.keys('0', '3');
+          expect(errors).to.have.nested.property('0.problem').to.eq('selector.needsTag');
+        });
       });
-
-      let valid_sels = {
-        vals: [
-          '.some-class',
-          'p.thing',
-          'div > ul > li:first-child',
-          '^^invalid^^',
-          'h1, h2, h3'
-        ]
-      }
-
-      let errors = validateSchema(schema, valid_sels, 'mocha-test');
-      console.log(errors)
-      expect(errors).to.be.a('object');
-      expect(errors, 'more errors returned than expected').to.have.all.keys('0', '3');
-      expect(errors).to.have.nested.property('0.problem').to.eq('selector.needsTag');
-
     })
-  })
+  });
 
   describe('#validators.elementMap', function() {
 

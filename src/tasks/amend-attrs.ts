@@ -1,7 +1,7 @@
-import { tasklog } from '../log.js';
+import { tasklog as log } from '../log.js';
 import { AccessNode } from '../dom/index.js';
 import { validators, validateSchema, taskSchema } from './task-config.js'
-import result from './task-result.js';
+import { newResult } from './task-result.js';
 import { 
   AmendAttrArgs,
   AmendAttrOp,
@@ -11,7 +11,7 @@ import {
 
 const TASK_NAME = 'amend-attrs';
 
-const log = tasklog.getSubLogger({ name: TASK_NAME });
+log.addContext('task', TASK_NAME);
 
 const { array, forbid, object, oneOf, req, string } = validators;
 
@@ -29,7 +29,6 @@ const attributeSchema = object({
   values: array().length(2).items(string().req().allow(''))
     .when('op', { is: 'regex', then: req(), otherwise: forbid() })
   })
-  .rename('attribute', 'attr')
 
 const schema = {
   attrs: array().items(attributeSchema)
@@ -38,13 +37,13 @@ const schema = {
 const configure = (config): TaskDefinition<AmendAttrArgs> => ({
   name: config.name,
   selector: config.selector,
-  validate: (args) => validateSchema(taskSchema.append(schema), args, TASK_NAME),
+  validate: (args) => validateSchema(taskSchema.append(schema), args, `${args.name}`),
   parse: (args) => args,
   transform: (config, node) => {
     const applyUpdates = (node: AccessNode, args: AmendAttrOp) => {
       let { attr, op } = args;
 
-      let value = new String(args.value).valueOf();
+      let value = String(args.value).valueOf();
 
       let currentVal = node.getAttr(attr);
 
@@ -54,7 +53,7 @@ const configure = (config): TaskDefinition<AmendAttrArgs> => ({
 
       if (op === 'regex') {
         if (!currentVal) {
-          log.error(`Cannot update attribute ${attr} on ${node.tag}`);
+          log.warn(`Cannot update attribute ${attr} on ${node.tag}`);
           return node;
         }
 
@@ -78,13 +77,15 @@ const configure = (config): TaskDefinition<AmendAttrArgs> => ({
       return node;
     }
 
+    let r = newResult(`${config.name} (${TASK_NAME})`);
+
     if (node.tag !== 'body') {
       let newNode = config.attrs.reduce(applyUpdates, node.clone());
-      return result().replace(node, newNode).final();
+      return r.replace(node, newNode).final();
     } else {
       // Replacing the body element with a clone has major consequences
       config.attrs.reduce(applyUpdates, node);
-      return result().final();
+      return r.final();
     }
   }
 });
@@ -95,19 +96,3 @@ const AmendAttrs: TransformTaskType<AmendAttrArgs> = {
 }
 
 export default AmendAttrs;
-
-
-//let attrs = node.getAttributeNames()
-//console.log(attrs);
-// Array.from(attrs).forEach(attr => {
-//   console.log(attr, node.getAttribute(attr));
-// });
-//       // TODO, data attributes. Not super important
-// 
-// const getAttribute = (n, attr) => {
-//   if (attr.startsWith('data-')) {
-//     return n.dataset[attr.replace('data-','')]
-//   } else {
-//     return n.getAttribute(attr);
-//   }
-// }
