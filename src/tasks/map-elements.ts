@@ -1,4 +1,4 @@
-import { tasklog as log } from '../log.js';
+import logger from '../log.js';
 import {
   TransformFunction,
   TransformTaskType,
@@ -17,6 +17,7 @@ import { newResult } from './task-result.js';
 
 const TASK_NAME = 'map-elements';
 
+const log = logger.getLogger(import.meta.url);
 log.addContext('task', TASK_NAME);
 
 const argsSchema = {

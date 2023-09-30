@@ -1,3 +1,4 @@
+import logger from '../../log.js';
 import { Adapter, DomAdapter } from './../dom.js';
 
 import format from "html-format";
@@ -5,6 +6,8 @@ import jsdom from 'jsdom';
 const { JSDOM } = jsdom;
 
 import JSDOMNode from './jsdom-node.js';
+
+const log = logger.getLogger(import.meta.url);
 
 const format_indent = ' '.repeat(4);
 const format_width = 2000;
@@ -32,6 +35,8 @@ class JSDOMAdapterImpl implements DomAdapter {
 
   query(selector) {
     let nodes = this.doc.querySelectorAll('body ' + selector);
+
+    log.debug(`Querying doc "${selector}"; found ${nodes.length} nodes`);
 
     return Array.from(nodes).map(node => {
       return JSDOMNode(this.dom, node as HTMLElement);

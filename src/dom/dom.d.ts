@@ -1,6 +1,5 @@
 import { NODE_TYPES } from './adapter/node.js';
 import { Optional } from "typescript-optional";
-import * as util from 'node:util';
 
 export type CSSSelectorString = string;
 export type CSSClassName = string;
@@ -104,7 +103,6 @@ export interface DomNode extends Debuggable {
   get parent(): AccessNode;
   find(selector: string): AccessNode[];
   next(): Optional<AccessNode>;
-
 }
 
 export type AccessNode = DomNode & TagNode;

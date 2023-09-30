@@ -1,10 +1,10 @@
 import FileAdapter from './dom/adapter/file-adapter.js';
 import JSDOMAdapter from './dom/adapter/jsdom-adapter.js';
 import TaskRunner from './tasks/task-runner.js';
-import { applog as log } from './log.js';
+import logger from './log.js';
 import { fileURLToPath } from 'node:url';
 
-
+const log = logger.getLogger(import.meta.url);
 
 declare global {
   interface CleanCmdOpts {
@@ -19,28 +19,32 @@ declare global {
 async function run(filename: string, opts: CleanCmdOpts) {
   console.time('clean');
 
-  let handle = FileAdapter(filename);
-  const adapter = JSDOMAdapter(handle);
-  const taskRunner = TaskRunner(adapter, opts);
+  try {
+    let handle = FileAdapter(filename);
+    const adapter = JSDOMAdapter(handle);
+    const taskRunner = TaskRunner(adapter, opts);
 
-  const modified_html = handle.getContents().replace(/<body[\w\W]+<\/body>/, adapter.body);
+    const modified_html = handle.getContents().replace(/<body[\w\W]+<\/body>/, adapter.body);
 
-  if (opts.fullDiff) {
-    handle.diffWith(modified_html);
+    if (opts.fullDiff) {
+      handle.diffWith(modified_html);
+    }
+
+    if (opts.debug) {
+
+      handle = FileAdapter(
+        fileURLToPath(new URL('../test/test-output.html', import.meta.url))
+      );
+    }
+
+    if (opts.dryrun) {
+      log.info(`Writing results to ${handle.target}`);
+      handle.saveContents(modified_html);
+    }
+    console.timeEnd('clean');
+  } catch (e) {
+    log.fatal(e);
   }
-
-  if (opts.debug) {
-
-    handle = FileAdapter(
-      fileURLToPath(new URL('../test/test-output.html', import.meta.url))
-    );
-  }
-
-  if (opts.dryrun) {
-    log.info(`Writing results to ${handle.target}`);
-    handle.saveContents(modified_html);
-  }
-  console.timeEnd('clean');
 }
 
 

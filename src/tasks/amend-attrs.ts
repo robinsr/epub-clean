@@ -1,16 +1,19 @@
-import { tasklog as log } from '../log.js';
+import logger from '../log.js';
 import { AccessNode } from '../dom/index.js';
 import { validators, validateSchema, taskSchema } from './task-config.js'
 import { newResult } from './task-result.js';
-import { 
+import {
+  AmendAttrAddReplaceOp,
   AmendAttrArgs,
   AmendAttrOp,
+  AmendAttrRegexOp,
   TaskDefinition,
-  TransformTaskType
+  TransformTaskType,
 } from './tasks.js';
 
 const TASK_NAME = 'amend-attrs';
 
+const log = logger.getLogger(import.meta.url);
 log.addContext('task', TASK_NAME);
 
 const { array, forbid, object, oneOf, req, string } = validators;
@@ -43,27 +46,28 @@ const configure = (config): TaskDefinition<AmendAttrArgs> => ({
     const applyUpdates = (node: AccessNode, args: AmendAttrOp) => {
       let { attr, op } = args;
 
-      let value = String(args.value).valueOf();
-
       let currentVal = node.getAttr(attr);
 
-      if (op === 'add') {
-        node.setAttr(attr, value);
-      }
-
       if (op === 'regex') {
+        let [ match, replacer ] = (<AmendAttrRegexOp> args).values;
+
         if (!currentVal) {
           log.warn(`Cannot update attribute ${attr} on ${node.tag}`);
           return node;
         }
 
-        let re = new RegExp(value[0]);
-        let replaceVal = currentVal.replace(re, value[1]);
+        let replaceVal = currentVal.replace(new RegExp(match), replacer);
         node.setAttr(attr, replaceVal);
       }
 
+      let stringVal = String((<AmendAttrAddReplaceOp> args).value).valueOf();
+
+      if (op === 'add') {
+        node.setAttr(attr, stringVal);
+      }
+
       if (op === 'replace' && node.hasAttr(attr)) {
-        node.setAttr(attr, value);
+        node.setAttr(attr, stringVal);
       }
 
       if (op === 'remove') {

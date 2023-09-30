@@ -1,5 +1,4 @@
-import * as util from 'node:util';
-import { domlog as log } from '../../log.js';
+import logger from '../../log.js';
 
 import ShortUniqueId from 'short-unique-id';
 import { Optional } from "typescript-optional";
@@ -8,6 +7,10 @@ import jsdom from 'jsdom';
 import Tag from '../tag.js';
 import { NODE_TYPES } from './node.js';
 import { AccessNode, DomNode } from '../dom.js';
+
+const log = logger.getLogger(import.meta.url);
+
+const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 const short = new ShortUniqueId.default({ length: 8 })
 const uuid = () => {
@@ -51,8 +54,10 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
     inspect() {
       return this.tagSummary;
     },
-    [util.inspect.custom]() {
-      return this.tagSummary;
+
+    // @ts-ignore-error
+    [customInspectSymbol](depth, inspectOptions, inspect) {
+      return `JSDOMNode <${this.tagSummary}>`;
     },
 
     get node() {

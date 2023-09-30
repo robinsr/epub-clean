@@ -1,5 +1,8 @@
+import logger from '../log.js';
 import {AccessNode, ElementMap, ParsedElementMap, ParsedSelectorString} from "./dom.js";
 import {parseSelector, removeNamespaces, sortSelectors} from "./selector.js";
+
+const log = logger.getLogger(import.meta.url);
 
 export const parseElementMap = (args: ElementMap): ParsedElementMap => {
   let mapKeys = sortSelectors(Object.keys(args).map(removeNamespaces));
@@ -40,5 +43,9 @@ export const mapNode = (
 
   let classString = newClss.length ? ` class="${newClss.join(' ')}"` : "";
 
-  return `<${newTag}${classString}${attrs}>${content}</${newTag}>`;
+  let domString = `<${newTag}${classString}${attrs}>${content}</${newTag}>`;
+
+  log.debug('Creating new DOM element with string:', domString);
+
+  return domString;
 }

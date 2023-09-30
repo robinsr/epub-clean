@@ -1,4 +1,4 @@
-import { tasklog as log } from '../log.js';
+import logger from '../log.js';
 import { TransformTaskType } from './tasks.js';
 import AmendAttrsTask  from './amend-attrs.js';
 import GroupElementsTask from './group-elements.js';
@@ -6,7 +6,7 @@ import ChangeCaseTask from './change-case.js';
 import RemoveElementsTask from './remove-elements.js';
 import MapElementsTask from './map-elements.js';
 
-
+const log = logger.getLogger(import.meta.url);
 log.addContext('task', 'task-index');
 
 const _tasks = [

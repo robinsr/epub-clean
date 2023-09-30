@@ -1,0 +1,16 @@
+logging:
+  categories:
+    default:
+      level: 'debug'
+    app:
+      level: 'debug'
+    diff:
+      level: 'debug'
+    dom:
+      level: 'debug'
+    program:
+      level: 'debug'
+    tasks:
+      level: 'warn'
+    tasks.task-runner:
+      level: 'debug'

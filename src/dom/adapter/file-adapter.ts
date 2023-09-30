@@ -1,12 +1,15 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import logger from '../../log.js';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { Adapter, HTMLFileContents } from './../dom.js';
 import FileDiff from '../../diff/FileDiff.js';
 import { fileURLToPath } from 'node:url';
 
+const log = logger.getLogger(import.meta.url);
 
 class FileAdapterImpl implements Adapter {
 
   constructor(public filename: string) {
+    log.debug('Creating FileAdapter for file: ', filename);
   }
 
   getContents(): HTMLFileContents {

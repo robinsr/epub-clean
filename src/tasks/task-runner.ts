@@ -1,24 +1,57 @@
-import { existsSync, readFileSync } from 'fs';
-import { isEmpty, noop } from 'remeda';
-import * as process from 'process';
+import { existsSync, readFileSync } from 'node:fs';
+import { extname } from 'node:path';
+import * as process from 'node:process';
+import { isEmpty, equals } from 'remeda';
+import JSON5 from 'json5'
+import yaml from 'js-yaml';
 
-import { applog as log } from '../log.js';
+import logger from '../log.js';
 import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
 import { Adapter, DomAdapter } from '../dom/index.js';
 import getTask from './index.js';
 import { taskSchema, validateSchema, validators } from './task-config.js';
 
+const log = logger.getLogger(import.meta.url);
 log.addContext('task', 'task-runner');
 
-
 const configSchema = validators.array().items(taskSchema.unknown(true));
+
+type config_type = 'json' | 'json5' | 'yaml' | 'unsupported';
+
+const getFileType = (filename: string): config_type => {
+  let ext = extname(filename);
+
+  let ext_map = {
+    '.json': 'json',
+    '.json5': 'json5',
+    '.yaml': 'yaml',
+    '.yml': 'yaml',
+  };
+
+  if (ext_map[ext]) {
+    return ext_map[ext];
+  } else {
+    throw new Error(`Unsupported config filetype: ${ext}`);
+  }
+}
+
 
 const getConfig = (filename: string): ConfigFile  => {
   if (!existsSync(filename)) {
     throw new Error('Config file not found');
   }
 
-  let config = JSON.parse(readFileSync(filename, 'utf8'));
+  let filetype = getFileType(filename);
+  log.debug(`Reading config file ${filetype}`)
+
+  let parse_map = {
+    'json': (c) => JSON.parse(c),
+    'json5': (c) => JSON5.parse(c),
+    'yaml': (c) => yaml.load(c),
+  };
+
+  let config = parse_map[filetype](readFileSync(filename, 'utf8'));
+
   let configErrors = validateSchema(configSchema, config);
 
   if (configErrors) {

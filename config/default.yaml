@@ -1,0 +1,89 @@
+definitions:
+  logging:
+    - category: &log-cat
+        enableCallStack: true
+        level: 'off'
+        appenders:
+          - console
+logging:
+  appenders:
+    console:
+      type: console
+      layout:
+        type: console_layout
+    stdout:
+      type: stdout
+  categories:
+    default:
+      <<: *log-cat
+    app:
+      <<: *log-cat
+    diff:
+      <<: *log-cat
+    dom:
+      <<: *log-cat
+    program:
+      <<: *log-cat
+    tasks:
+      <<: *log-cat
+    difflog:
+        level: diff
+        appenders:
+          - stdout
+  levels:
+    trace:
+      value: 5000
+      prefix: "[TRACE]"
+      theme: gray
+    debug:
+      value: 10000
+      prefix: "[DEBUG]"
+      theme: brightMagenta
+    info:
+      value: 20000
+      prefix: "[INFO]"
+      theme: cyan
+    warn:
+      value: 30000
+      prefix: "[WARN]"
+      theme: yellow
+    error:
+      value: 40000
+      prefix: "[ERROR]"
+      theme:
+      - red
+      - bold
+    fatal:
+      value: 50000
+      prefix: "[FATAL]"
+      theme:
+      - red
+      - inverse
+    diff:
+      value: 20000
+      prefix: "[DIFF]"
+      theme: gray
+    added:
+      value: 55000
+      prefix: 'added:'
+      theme: green
+    removed:
+      value: 55000
+      prefix: 'removed:'
+      theme: red
+    success:
+      value: 55000
+      prefix: "[OK]"
+      theme:
+      - green
+      - inverse
+    default:
+      value: 20000
+      prefix: "[LOG]"
+      theme:
+      - blue
+      - dim
+    'off':
+      value: 2.0e+50
+      prefix: ''
+      theme: gray

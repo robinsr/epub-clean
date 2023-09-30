@@ -18,7 +18,8 @@ export default class TaskResult {
 
     if (allEmpty) return true;
 
-    return this.docChanges.flat().map(e => e.noChangePresent);
+    return this.docChanges.flat()
+      .every(change => change.noChangePresent)
   }
 
   public get remove(): DocumentChange[] {

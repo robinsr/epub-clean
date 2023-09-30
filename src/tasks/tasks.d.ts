@@ -14,11 +14,24 @@ export interface CommonTaskArgs {
   selector: CSSSelectorString;
 }
 
-export interface AmendAttrOp {
-  op: 'add' | 'remove' | 'replace' | 'regex';
+export interface AmendAttrAddReplaceOp {
+  op: 'add' | 'replace';
   attr: string;
   value: string | number;
 }
+
+export interface AmendAttrRegexOp {
+  op: 'regex';
+  attr: string;
+  values: [ RegExp, string ];
+}
+
+export interface AmendAttrRemoveOp {
+  op: 'remove'
+  attr: string;
+}
+
+export type AmendAttrOp = AmendAttrAddReplaceOp | AmendAttrRegexOp | AmendAttrRemoveOp;
 
 export interface AmendAttrArgs extends CommonTaskArgs {
   attrs: AmendAttrOp[];

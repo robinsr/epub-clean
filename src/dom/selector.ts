@@ -1,4 +1,4 @@
-import { domlog as log } from '../log.js'
+import logger from '../log.js'
 import { ParsedSelectorString } from './dom.js';
 import jsdom from 'jsdom';
 import * as spec from 'specificity';
@@ -13,6 +13,8 @@ import {
   TypeSelector,
 } from 'css-tree';
 
+
+const log = logger.getLogger(import.meta.url);
 
 const { JSDOM } = jsdom;
 
@@ -73,7 +75,7 @@ export const getNamespaces = (sel: string): Array<string> => {
 }
 
 const echo = (msg: any): any => {
-  log.info(msg);
+  log.debug('echo:', msg);
   return msg;
 }
 
@@ -95,14 +97,8 @@ const default_tag = (selector: string = '', tag?: string): ParsedSelectorString 
   preserveOther: false
 });
 
-export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
-  log.info(selector);
 
-  if (isEmpty(selector)) {
-    return null;
-  }
-
-  let extractValues = (node: SelectorPlain) => {
+const extractTagAndClasslist = (selector: string, node: SelectorPlain) => {
     let tag = null, classList = [];
 
     if (node.children.at(0).type === 'TypeSelector') {
@@ -116,30 +112,36 @@ export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
     return Object.assign({}, default_tag(selector, tag), { classList });
   }
 
+export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
+  log.debug(`Parsing selector string "${selector}" (v2)`);
+
+  if (isEmpty(selector)) {
+    return null;
+  }
+
   let context = selector.match(',') ? 'selectorList' : 'selector';
 
   try {
     let tree = toPlainObject(parse(removeNamespaces(selector), { context }));
-    log.info(tree);
-    console.log(tree);
+    log.debug(`CSS-Tree: Parsed selector "${removeNamespaces(selector)}":` , tree);
 
     let type: string, children: CssNodePlain[], p: ParsedSelectorString;
 
     if (context === 'selectorList') {
       type = (tree as SelectorListPlain).type;
       children = (tree as SelectorListPlain).children;
-      p = extractValues(children.at(0) as SelectorPlain)
+      p = extractTagAndClasslist(selector, children.at(0) as SelectorPlain)
     }
 
     else if (context === 'selector') {
       type = (tree as SelectorPlain).type;
       children = (tree as SelectorPlain).children;
-      p = extractValues(tree as SelectorPlain);
-      log.info(p)
+      p = extractTagAndClasslist(selector, tree as SelectorPlain);
+      log.debug(p)
     }
 
-    log.info('type:', type)
-    log.info('children:', children);
+    log.debug('CSS-Tree: Found type:', type)
+    log.debug('CSS-Tree: Found children:', children);
 
     return p;
 

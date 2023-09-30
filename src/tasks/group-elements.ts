@@ -1,4 +1,4 @@
-import { tasklog as log } from '../log.js';
+import logger from '../log.js';
 import { newResult } from './task-result.js';
 import {CommonTaskArgs, GroupElementsArgs, TransformTaskType} from './tasks.js';
 import {validators, taskSchema, validateSchema} from "./task-config.js";
@@ -9,6 +9,7 @@ import { parseSelectorV2 } from '../dom/selector.js';
 
 const task_name = 'group-elements';
 
+const log = logger.getLogger(import.meta.url);
 log.addContext('task', task_name);
 
 const argsSchema = {

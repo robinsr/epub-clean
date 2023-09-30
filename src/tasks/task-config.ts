@@ -1,11 +1,12 @@
 import Joi, { ObjectSchema, ArraySchema } from 'joi';
 
-import { tasklog as log } from '../log.js';
+import logger from '../log.js';
 
 import { ValidationResult } from "./tasks.js";
 import { isValidSelector, parseSelector } from '../dom/index.js';
 import { parseSelectorV2 } from '../dom/selector.js';
 
+const log = logger.getLogger(import.meta.url);
 log.addContext('task', 'task-config');
 
 const JOI_OPTS = {
@@ -31,7 +32,7 @@ const selector_type = (joi): Joi.Extension => ({
   validate(value, helpers) {
     if (helpers.schema.$_getFlag('allow-siblings')) {
       let p = parseSelectorV2(value);
-      console.log(p)
+      log.debug('parsed selector:', p);
       return { value, errors: helpers.error('selector.sibling') }
     }
 
@@ -128,14 +129,14 @@ export const validateSchema = (
     return null;
   }
 
-  log.warn(`Validation errors (${label}):`);
+  log.warn('Validation errors for task:', label);
 
   let addLabel = str => `(${label}) ${str};`
 
   return error.details
     .map(err =>  ({ ...err, message: addLabel(err.message) }))
     .reduce((acc, { message, type: problem, context }) => {
-      //console.log(message, problem, context)
+      log.debug('Validation error:', message, problem, context);
       let { key, value } = context;
       return { ...acc, [key]: { problem, value, message } }
   }, {});
