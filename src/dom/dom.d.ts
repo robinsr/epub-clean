@@ -1,26 +1,22 @@
 import { NODE_TYPES } from './adapter/node.js';
 import { Optional } from "typescript-optional";
 
-export type CSSSelectorString = string;
-export type CSSClassName = string;
-export type CSSNamespace = string;
-export type TagName = string;
 
 export interface ParsedSelectorString {
   selector: string;
-  tag: TagName;
-  classList: Array<CSSClassName>;
-  namespaces: Array<CSSNamespace>;
+  tag: string;
+  classList: string[];
+  namespaces: string[];
   preserveAll: boolean;
   preserveOther: boolean;
 }
 
 export interface ElementMap {
-  [key: CSSSelectorString]: CSSSelectorString
+  [key: string]: string
 }
 
 export interface ParsedElementMap {
-  [key: CSSSelectorString]: {
+  [key: string]: {
     from: ParsedSelectorString;
     to: ParsedSelectorString;
   }
@@ -44,11 +40,11 @@ export interface Adapter {
 }
 
 export interface DomAdapter {
-  get body(): HTMLBodyContents;
-  query: (selector: CSSSelectorString) => AccessNode[];
-  first: (selector: CSSSelectorString) => AccessNode;
+  get body(): string;
+  query: (selector: string) => AccessNode[];
+  first: (selector: string) => AccessNode;
   get: (id: string) => AccessNode;
-  contains: (node: AccessNode) => boolean;
+  contains(node: AccessNode): boolean;
   newNode: (str: DomString) => AccessNode;
   clean(): void;
 }

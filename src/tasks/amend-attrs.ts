@@ -1,4 +1,4 @@
-import logger from '../log.js';
+import logger from '../util/log.js';
 import { AccessNode } from '../dom/index.js';
 import { validators, validateSchema, taskSchema } from './task-config.js'
 import { newResult } from './task-result.js';

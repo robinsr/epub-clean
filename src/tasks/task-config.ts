@@ -1,20 +1,13 @@
-import Joi, { ObjectSchema, ArraySchema } from 'joi';
+import Joi, { ArraySchema, ObjectSchema } from 'joi';
 
-import logger from '../log.js';
-
-import { ValidationResult } from "./tasks.js";
-import { isValidSelector, parseSelector } from '../dom/index.js';
+import logger from '../util/log.js';
+import { ValidationResult } from './tasks.js';
+import { isValidSelector } from '../dom/index.js';
 import { parseSelectorV2 } from '../dom/selector.js';
+import { point } from '../util/string.js';
 
 const log = logger.getLogger(import.meta.url);
 log.addContext('task', 'task-config');
-
-const JOI_OPTS = {
-  abortEarly: false,
-  wrap: { label: false }
-}
-
-const point = str =>  `\u2B95 ${str} \u2B05`;
 
 const selectorMsgs = {
   'object.unknown': `Invalid CSS selector in mapping: [ ${point('{#key}')} : {#value} ]`,
@@ -96,7 +89,7 @@ export const validators = {
     opt: () => Joi.string(),
     arr: (l: number) => Joi.array().length(l)
   }),
-  oneOf: (...values) => Joi.any().valid(...values).required(),
+  oneOf: (...values: string[]) => Joi.any().valid(...values).required(),
   selector: () => custom_validators.selector().required(),
   elementMap: elementMap,
   object: (...args: any[]) => Joi.object(...args),
@@ -112,6 +105,13 @@ export const taskSchema = Joi.object({
   ).required()
 });
 
+const joi_validation_opts: Joi.ValidationOptions = {
+  abortEarly: false,
+  errors: {
+    wrap: { label: false }
+  }
+};
+
 export const validateSchema = (
   schema: ObjectSchema | ArraySchema,
   args: object,
@@ -119,11 +119,7 @@ export const validateSchema = (
 ): ValidationResult | null => {
   log.debug('Validating schema:', schema.describe());
 
-  let opts = {
-  //  context: { forTask: label }
-  };
-
-  let { error } = schema.validate(args, { ...JOI_OPTS, ...opts });
+  let { error } = schema.validate(args, joi_validation_opts);
 
   if (!error) {
     return null;

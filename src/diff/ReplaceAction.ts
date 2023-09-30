@@ -1,9 +1,10 @@
-import { diffChars, diffLines } from 'diff';
+import { diffLines } from 'diff';
 import { AccessNode, DomAdapter } from '../dom/index.js';
 import DocChange from './DocChange.js';
+import { PrintableDiff } from './PrintableDiff.js';
 
 
-class ReplaceAction extends DocChange {
+class ReplaceAction extends PrintableDiff implements DocChange {
   type = 'REPLACE-NODE' as const;
 
   constructor(

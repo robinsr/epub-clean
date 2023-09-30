@@ -1,3 +1,6 @@
+import config from 'config';
+import { point } from './string.js';
+
 export interface LogAppenders {
   [name: string]: {
     type: string;
@@ -7,7 +10,7 @@ export interface LogAppenders {
   }
 }
 
-type LogLevels = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "diff" | "added" | "removed" | "success" | "default" | "off"
+export type LogLevels = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "diff" | "added" | "removed" | "success" | "default" | "off"
 
 export type LogLevelConfig = {
   [L in LogLevels]?: {
@@ -33,4 +36,16 @@ export interface LogConfig {
 
 export interface AppConfig {
   logging: LogConfig;
+}
+
+interface ConfigFlags {
+  debug_logging: boolean;
+}
+
+export const node_env = config.util.getEnv('NODE_ENV');
+export const flags = <ConfigFlags>config.get('flags');
+export const log_config = <LogConfig>config.get('logging');
+
+if (node_env !== 'production') {
+  console.log('Config flags:', flags);
 }

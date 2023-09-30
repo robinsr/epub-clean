@@ -1,4 +1,4 @@
-import logger from '../../log.js';
+import logger from '../../util/log.js';
 import { Adapter, DomAdapter } from './../dom.js';
 
 import format from "html-format";

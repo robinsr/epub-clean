@@ -1,8 +1,9 @@
 import { diffChars } from 'diff';
 import { AccessNode, DomAdapter } from '../dom/index.js';
 import DocumentChange, { ChangeType } from './DocChange.js';
+import { PrintableDiff } from './PrintableDiff.js';
 
-class RemoveAction extends DocumentChange {
+class RemoveAction extends PrintableDiff implements DocumentChange {
   type = 'REMOVE-NODE' as const;
 
   constructor(

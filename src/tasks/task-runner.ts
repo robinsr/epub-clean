@@ -5,7 +5,7 @@ import { isEmpty, equals } from 'remeda';
 import JSON5 from 'json5'
 import yaml from 'js-yaml';
 
-import logger from '../log.js';
+import logger from '../util/log.js';
 import { ConfigFile, ParsedTask, TaskArgs, TaskDefinition } from './tasks.js';
 import { Adapter, DomAdapter } from '../dom/index.js';
 import getTask from './index.js';

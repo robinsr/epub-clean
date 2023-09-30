@@ -21,10 +21,6 @@ export {
 }
 
 import type {
-  CSSSelectorString,
-  CSSClassName,
-  CSSNamespace,
-  TagName,
   ParsedSelectorString,
   ElementMap,
   ParsedElementMap,
@@ -36,10 +32,6 @@ import type {
 } from './dom.js';
 
 export {
-  CSSSelectorString,
-  CSSClassName,
-  CSSNamespace,
-  TagName,
   ParsedSelectorString,
   ElementMap,
   ParsedElementMap,

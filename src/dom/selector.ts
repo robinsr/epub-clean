@@ -1,4 +1,4 @@
-import logger from '../log.js'
+import logger from '../util/log.js'
 import { ParsedSelectorString } from './dom.js';
 import jsdom from 'jsdom';
 import * as spec from 'specificity';
@@ -98,7 +98,7 @@ const default_tag = (selector: string = '', tag?: string): ParsedSelectorString 
 });
 
 
-const extractTagAndClasslist = (selector: string, node: SelectorPlain) => {
+const extractTagAndClassList = (selector: string, node: SelectorPlain) => {
     let tag = null, classList = [];
 
     if (node.children.at(0).type === 'TypeSelector') {
@@ -130,13 +130,13 @@ export const parseSelectorV2 = (selector: string): ParsedSelectorString => {
     if (context === 'selectorList') {
       type = (tree as SelectorListPlain).type;
       children = (tree as SelectorListPlain).children;
-      p = extractTagAndClasslist(selector, children.at(0) as SelectorPlain)
+      p = extractTagAndClassList(selector, children.at(0) as SelectorPlain)
     }
 
     else if (context === 'selector') {
       type = (tree as SelectorPlain).type;
       children = (tree as SelectorPlain).children;
-      p = extractTagAndClasslist(selector, tree as SelectorPlain);
+      p = extractTagAndClassList(selector, tree as SelectorPlain);
       log.debug(p)
     }
 

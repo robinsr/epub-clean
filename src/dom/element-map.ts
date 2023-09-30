@@ -1,4 +1,4 @@
-import logger from '../log.js';
+import logger from '../util/log.js';
 import {AccessNode, ElementMap, ParsedElementMap, ParsedSelectorString} from "./dom.js";
 import {parseSelector, removeNamespaces, sortSelectors} from "./selector.js";
 

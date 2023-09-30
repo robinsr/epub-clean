@@ -1,7 +1,7 @@
-import FileAdapter from './dom/adapter/file-adapter.js';
-import JSDOMAdapter from './dom/adapter/jsdom-adapter.js';
-import TaskRunner from './tasks/task-runner.js';
-import logger from './log.js';
+import FileAdapter from '../dom/adapter/file-adapter.js';
+import JSDOMAdapter from '../dom/adapter/jsdom-adapter.js';
+import TaskRunner from '../tasks/task-runner.js';
+import logger from '../util/log.js';
 import { fileURLToPath } from 'node:url';
 
 const log = logger.getLogger(import.meta.url);

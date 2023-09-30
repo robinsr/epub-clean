@@ -1,9 +1,10 @@
 import { diffChars, diffLines } from 'diff';
 import { AccessNode, Adapter, DomAdapter } from '../dom/index.js';
 import DocChange from './DocChange.js';
+import { PrintableDiff } from './PrintableDiff.js';
 
 
-class ModifyAction extends DocChange {
+class ModifyAction extends PrintableDiff implements DocChange  {
   type = 'MODIFY-NODE' as const;
 
   constructor(

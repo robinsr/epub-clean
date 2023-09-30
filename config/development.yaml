@@ -2,15 +2,17 @@ logging:
   categories:
     default:
       level: 'debug'
+    debug_log:
+      level: 'info'
     app:
+      level: 'debug'
+    cmd:
       level: 'debug'
     diff:
       level: 'debug'
     dom:
-      level: 'debug'
-    program:
-      level: 'debug'
+      level: 'info'
     tasks:
-      level: 'warn'
+      level: 'info'
     tasks.task-runner:
       level: 'debug'

@@ -2,9 +2,12 @@ definitions:
   logging:
     - category: &log-cat
         enableCallStack: true
-        level: 'off'
+        level: 'error'
         appenders:
           - console
+
+flags:
+  debug_logging: 0
 logging:
   appenders:
     console:
@@ -16,13 +19,16 @@ logging:
   categories:
     default:
       <<: *log-cat
+    debug_log:
+      <<: *log-cat
+      level: 'off'
     app:
+      <<: *log-cat
+    cmd:
       <<: *log-cat
     diff:
       <<: *log-cat
     dom:
-      <<: *log-cat
-    program:
       <<: *log-cat
     tasks:
       <<: *log-cat

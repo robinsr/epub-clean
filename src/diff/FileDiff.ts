@@ -1,5 +1,5 @@
-import { PrintableDiff } from './DocChange.js';
 import { diffLines } from 'diff';
+import { PrintableDiff } from './PrintableDiff.js';
 
 
 class FileDiff extends PrintableDiff {

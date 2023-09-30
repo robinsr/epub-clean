@@ -2,17 +2,21 @@ import { stdout } from 'node:process';
 import { inspect } from 'node:util';
 import { basename, relative } from 'node:path';
 import { install } from 'source-map-support'
-import config from 'config';
 import colors from 'colors';
 import * as R from 'remeda';
 import log4js from 'log4js';
 import { LoggingEvent } from 'log4js';
 import { callerFn, getSourceTS }  from './caller.js';
-import { LogConfig } from './program/config.js';
+import { flags, log_config, LogLevels } from './config.js';
+import { point } from './string.js';
 
 install();
 
-let log_config = config.get<LogConfig>('logging');
+const debug_log_level = log_config.categories['debug_log'].level;
+
+if (debug_log_level !== 'off') {
+  console.log(point(`Debug logging enabled at ${debug_log_level}`, 5));
+}
 
 const caller = callerFn(import.meta.url);
 
@@ -38,32 +42,42 @@ let levels = R.pipe(log_config.levels,
   R.mapValues((val) => ({ ...val, colour: 'cyan' }))
 );
 
-log4js.addLayout('console_layout', config => (l: LoggingEvent) => {
-  let level = l.level.levelStr;
+log4js.addLayout('console_layout', config => (log_event: LoggingEvent) => {
+  let debug_logger = log4js.getLogger('debug_log');
+  let level = log_event.level.levelStr;
   let level_config = log_config.levels[level.toLowerCase()];
   let color_code = level.toLowerCase() || 'default';
-  //console.log(json(l));
+  let call_location = 'unknown';
 
-  let source = getSourceTS({
-    source: l.fileName,
-    line: l.lineNumber,
-    column: l.columnNumber
-  });
+  if (debug_logger.isTraceEnabled()) {
+    // Do not use debug_logger directly here; will create infinite loop!
+    console.log('Logging event:', json(log_event));
+  }
+
+  if (log_event.fileName) {
+    let source = getSourceTS({
+      source: log_event.fileName,
+      line: log_event.lineNumber,
+      column: log_event.columnNumber
+    });
+
+    call_location = `${basename(source.source)}:${source.line}`;
+  }
 
   return [
     level_config.prefix[color_code],
-    colors.gray(`(${l.categoryName}) ${basename(source.source)}:${source.line}:`),
-    l.data.flat().map(json).join(' ')
+    colors.gray(`(${log_event.categoryName}) ${call_location}:`),
+    log_event.data.flat().map(json).join(' ')
   ].join(' ');
 });
 
 
 log4js.configure({ ...log_config, levels });
 
-const defaultlog = log4js.getLogger('app');
-const logdebug = log4js.getLogger('app.log');
+const default_logger = log4js.getLogger('app');
+const debug_logger = log4js.getLogger('debug_log');
 
-logdebug.debug('Logging config', { ...log_config, levels });
+debug_logger.debug('Logging config', { ...log_config, levels });
 
 
 class DiffLogger {
@@ -84,13 +98,13 @@ class DiffLogger {
 
 const difflog = new DiffLogger();
 
-const getConfiguredLevel = (logger: log4js.Logger) => {
-  let levels = ['Trace', 'Debug', 'Info', 'Warn', 'Error', 'Fatal'];
-  let log_level = levels.find(l => {
-    return logger[`is${l}Enabled`]();
+const getConfiguredLevel = (logger: log4js.Logger): LogLevels => {
+  let levels = Object.keys(log_config.levels) as LogLevels[];
+  let log_level = levels.find(lev => {
+    return logger.isLevelEnabled(lev);
   });
 
-  return log_level ? log_level.toLowerCase() : null;
+  return log_level || 'off';
 }
 
 const logger = {
@@ -101,13 +115,12 @@ const logger = {
     let log_level = getConfiguredLevel(logger);
 
     if (!log_level) {
-      logdebug.warn(`Logger ${log_name} not configured. Using default`);
-      log_name = 'default';
-      logger = defaultlog;
-      log_level = getConfiguredLevel(defaultlog);
+      log_level = getConfiguredLevel(default_logger);
+      debug_logger.warn(`Logger ${log_name} not configured. Using "default" (${log_level})`);
+      return default_logger;
     }
 
-    logdebug.info(`Using logger "${log_name}" (${log_level.toLowerCase()}) for file ${r}`);
+    debug_logger.info(`Using logger "${log_name}" (${log_level.toLowerCase()}) for file ${r}`);
 
     return logger;
   }

@@ -1,4 +1,4 @@
-import logger from '../../log.js';
+import logger from '../../util/log.js';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { Adapter, HTMLFileContents } from './../dom.js';
 import FileDiff from '../../diff/FileDiff.js';

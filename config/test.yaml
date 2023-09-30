@@ -1,0 +1,16 @@
+logging:
+  categories:
+    default:
+      level: 'off'
+    app:
+      level: 'off'
+    cmd:
+      level: 'off'
+    diff:
+      level: 'off'
+    dom:
+      level: 'off'
+    tasks:
+      level: 'off'
+    tasks.task-runner:
+      level: 'off'

@@ -1,4 +1,4 @@
-import logger from '../log.js';
+import logger from '../util/log.js';
 import { newResult } from './task-result.js';
 import {CommonTaskArgs, GroupElementsArgs, TransformTaskType} from './tasks.js';
 import {validators, taskSchema, validateSchema} from "./task-config.js";

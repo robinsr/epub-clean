@@ -18,7 +18,7 @@ const css = {
     id: '#some-id'
   },
   attributeSelectors: {
-    // TODO
+    // TODO - Test attribute selectors
     attrExists: '[attributename]',
     attrEquals: '[attributename=value]',
     attrListContains: '[attributename~=value]',

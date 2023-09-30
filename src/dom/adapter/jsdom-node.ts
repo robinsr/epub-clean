@@ -1,4 +1,4 @@
-import logger from '../../log.js';
+import logger from '../../util/log.js';
 
 import ShortUniqueId from 'short-unique-id';
 import { Optional } from "typescript-optional";

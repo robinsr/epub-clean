@@ -1,4 +1,4 @@
-import logger from '../log.js';
+import logger from '../util/log.js';
 import { TransformTaskType } from './tasks.js';
 import AmendAttrsTask  from './amend-attrs.js';
 import GroupElementsTask from './group-elements.js';

@@ -1,0 +1,6 @@
+flags:
+  debug_logging: LOG_DEBUG
+logging:
+  categories:
+    debug_log:
+      level: LOG_DEBUG

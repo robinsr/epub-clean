@@ -1,5 +1,6 @@
+import './util/config.js';
 import { Command } from 'commander';
-import clean from './clean.js';
+import clean from './cmd/clean.js';
 
 const program = new Command();
 
