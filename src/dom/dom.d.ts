@@ -52,12 +52,7 @@ export interface NodeLocation {
 
 export type NodeFormatOptions = 'full' | 'diff';
 
-interface Debuggable {
-  inspect(depth, opts): string;
-  [util.inspect.custom](depth, opts): string;
-}
-
-export interface DomNode extends Debuggable {
+export interface DomNode {
   get node(): HTMLElement;
   get id(): string;
   setId(str: string): void

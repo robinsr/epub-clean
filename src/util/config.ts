@@ -42,6 +42,8 @@ interface ConfigFlags {
   debug_logging: boolean;
 }
 
+console.log('Configuration directory: ' + config.util.getEnv('NODE_CONFIG_DIR'));
+
 export const node_env = config.util.getEnv('NODE_ENV');
 export const flags = <ConfigFlags>config.get('flags');
 export const log_config = <LogConfig>config.get('logging');

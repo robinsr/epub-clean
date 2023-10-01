@@ -1,5 +1,4 @@
 import { stdout } from 'node:process';
-import { inspect } from 'node:util';
 import { basename, relative } from 'node:path';
 import { install } from 'source-map-support'
 import colors from 'colors';
@@ -8,7 +7,7 @@ import log4js from 'log4js';
 import { LoggingEvent } from 'log4js';
 import { callerFn, getSourceTS }  from './caller.js';
 import { flags, log_config, LogLevels } from './config.js';
-import { point } from './string.js';
+import { point, json } from './string.js';
 
 install();
 
@@ -19,18 +18,6 @@ if (debug_log_level !== 'off') {
 }
 
 const caller = callerFn(import.meta.url);
-
-const json_options = {
-  colors: true, depth: 12
-}
-
-const json = (obj: any): string => {
-  let doInspect = R.anyPass(obj, [R.isObject, R.isArray, R.isDate, R.isFunction])
-  if (doInspect) {
-    return inspect(obj, json_options);
-  }
-  return obj;
-}
 
 let themeMap = R.pipe(log_config.levels,
   R.mapValues((val) => val.theme)
@@ -67,7 +54,8 @@ log4js.addLayout('console_layout', config => (log_event: LoggingEvent) => {
   return [
     level_config.prefix[color_code],
     colors.gray(`(${log_event.categoryName}) ${call_location}:`),
-    log_event.data.flat().map(json).join(' ')
+    // log_event.data.flat().map(json).join(' ')
+    log_event.data.map(json).join(' ')
   ].join(' ');
 });
 

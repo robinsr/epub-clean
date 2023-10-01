@@ -1,17 +1,17 @@
 import {
   AccessNode,
   DomAdapter,
-  CSSSelectorString,
+  DomNode,
   ElementMap,
-  ParsedElementMap
-} from "../dom/index.js";
+  ParsedElementMap,
+} from '../dom/index.js';
 import TaskResult from './task-result.js';
 
 
 export interface CommonTaskArgs {
   name: string;  // name of configured task ("do a thing with <span> tags")
   task: string;  // name of task type (amend-attrs, change-case, etc)
-  selector: CSSSelectorString;
+  selector: string;
 }
 
 export interface AmendAttrAddReplaceOp {
@@ -43,7 +43,7 @@ export interface ChangeCaseArgs extends CommonTaskArgs {
 }
 
 export interface GroupElementsArgs extends CommonTaskArgs {
-  wrapper: CSSSelectorString;
+  wrapper: string;
   map: ElementMap;
 }
 
@@ -52,8 +52,8 @@ export interface MapElementsArgs extends CommonTaskArgs {
 }
 
 export interface MapElementsConfig extends CommonTaskArgs {
-  mapKeys: Array<CSSSelectorString>
-  map: ParsedElementMap
+  mapKeys: string[];
+  map: ParsedElementMap;
 }
 
 export interface RemoveElementsArgs extends CommonTaskArgs {
@@ -76,7 +76,7 @@ export interface TransformTaskType<A extends CommonTaskArgs, C = A> {
 
 export interface TaskDefinition<A, C = A> {
   name: string;
-  selector: CSSSelectorString;
+  selector: string;
   validate(args: A): ValidationResult | null,
   parse(args: A): C;
   filter?: (node: AccessNode) => boolean;

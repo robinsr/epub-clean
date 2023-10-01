@@ -51,15 +51,6 @@ const JSDOMNode = (dom: jsdom.JSDOM, node: HTMLElement): AccessNode  => {
   }
 
   let accessors: DomNode = {
-    inspect() {
-      return this.tagSummary;
-    },
-
-    // @ts-ignore-error
-    [customInspectSymbol](depth, inspectOptions, inspect) {
-      return `JSDOMNode <${this.tagSummary}>`;
-    },
-
     get node() {
       return _node;
     },
