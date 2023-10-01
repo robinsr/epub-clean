@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import {before, describe, it} from 'mocha';
-import { logContext, wrapErrCtx } from '../support/test-utils.js'
+import { wrapErrCtx } from '../support/test-utils.js'
 
 import { taskSchema, validators, validateSchema } from '../../src/tasks/task-config.js';
 
@@ -124,7 +124,7 @@ describe('Tasks - task-config', function() {
         }
 
         let errors = validateSchema(schema, valid_sels, 'mocha-test');
-        wrapErrCtx(this.test, errors, done, () => {
+        wrapErrCtx(this, errors, done, () => {
           expect(errors).to.be.a('object');
           expect(errors, 'more errors returned than expected').to.have.all.keys('0', '3');
           expect(errors).to.have.nested.property('0.problem').to.eq('selector.needsTag');

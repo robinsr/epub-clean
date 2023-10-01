@@ -11,7 +11,7 @@ logging:
     diff:
       level: 'debug'
     dom:
-      level: 'info'
+      level: 'debug'
     tasks:
       level: 'info'
     tasks.task-runner:

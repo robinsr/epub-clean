@@ -23,15 +23,48 @@ const attributeSchema = object({
   attr: string().req(),
   op: oneOf('add', 'remove', 'replace', 'regex'),
   value: string().opt()
-    .when('op', [
-      { is: 'add', then: req() },
-      { is: 'replace', then: req() },
-      { is: 'remove', then: forbid() },
-      { is: 'regex', then: forbid() }
+    .when('op', [ {
+      is: 'add', then: req().messages({
+        'any.required': 'Property "value" is required for operation "add"',
+        'string.empty': 'Property "value" cannot be empty. Did you mean to use operation "remove"'
+      })
+    }, {
+      is: 'replace',
+      then: req().messages({
+        'any.required': 'Property "value" is required for operation "replace"',
+        'string.empty': 'Property "value" cannot be empty. Did you mean to use operation "remove"'
+      })
+    }, {
+      is: 'remove',
+      then: forbid().messages({
+        'any.unknown': 'Property "value" is not needed for operation "remove"'
+      })
+    }, {
+      is: 'regex',
+      then: forbid().messages({
+        'object.unknown': 'For operation "regex", use properties "match" and "replace"'
+      })
+    }
   ]),
-  values: array().length(2).items(string().req().allow(''))
-    .when('op', { is: 'regex', then: req(), otherwise: forbid() })
+  match: string().req() .when('op', {
+    is: 'regex',
+    then: req().messages({
+      'any.required': 'Property "match" is required for operation "regex"'
+    }),
+    otherwise: forbid().messages({
+      'any.unknown': 'Property "match" not allowed unless using operation "regex"'
+    })
+  }),
+  replace: string().req().allow('').when('op', {
+    is: 'regex',
+    then: req().messages({
+      'any.required': 'Property "replace" is required for operation "regex"'
+    }),
+    otherwise: forbid().messages({
+      'any.unknown': 'property "replace" not allowed unless using operation "regex"'
+    })
   })
+});
 
 const schema = {
   attrs: array().items(attributeSchema)
@@ -49,14 +82,14 @@ const configure = (config): TaskDefinition<AmendAttrArgs> => ({
       let currentVal = node.getAttr(attr);
 
       if (op === 'regex') {
-        let [ match, replacer ] = (<AmendAttrRegexOp> args).values;
+        let { match, replace } = (<AmendAttrRegexOp> args);
 
         if (!currentVal) {
           log.warn(`Cannot update attribute ${attr} on ${node.tag}`);
           return node;
         }
 
-        let replaceVal = currentVal.replace(new RegExp(match), replacer);
+        let replaceVal = currentVal.replace(new RegExp(match), replace);
         node.setAttr(attr, replaceVal);
       }
 

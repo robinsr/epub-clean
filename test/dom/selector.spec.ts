@@ -8,6 +8,7 @@ import {
 import {clamp, range, times, values} from "remeda";
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
+import { parseSelectorV2 } from '../../src/dom/selector.js';
 
 
 const css = {
@@ -224,12 +225,14 @@ describe('DOM - selector', () => {
     let selector = `${tag}.${classList.join('.')}|${css.namespaces}`
 
     it('should return the tag name', () => {
+      //let results = parseSelector(selector);
       let results = parseSelector(selector);
       expect(results).to.be.a('object');
       expect(results).to.have.property('tag', 'p')
     });
 
     it('should return the classlist', () => {
+      //let results = parseSelector(selector);
       let results = parseSelector(selector);
       expect(results).to.be.a('object');
       expect(results).to.have.property('classList');
@@ -238,6 +241,7 @@ describe('DOM - selector', () => {
     });
 
     it('should return the namespaces', () => {
+      //let results = parseSelector(selector);
       let results = parseSelector(selector);
       expect(results).to.be.a('object');
       expect(results).to.have.property('namespaces');
@@ -246,6 +250,7 @@ describe('DOM - selector', () => {
     });
 
     it('should return values false for "preserveAll" and "preserveOther', () => {
+      //let results = parseSelector(selector);
       let results = parseSelector(selector);
       expect(results).to.be.a('object');
       expect(results).to.have.property('preserveAll', false);
@@ -254,6 +259,7 @@ describe('DOM - selector', () => {
 
     it('should return true values for "preserveAll"', () => {
       let selector = `${tag}.${classList.join('.')}|all`
+      //let results = parseSelector(selector);
       let results = parseSelector(selector);
       expect(results).to.be.a('object');
       expect(results).to.have.property('preserveAll', true);
@@ -261,9 +267,23 @@ describe('DOM - selector', () => {
 
     it('should return true values for "preserveOther"', () => {
       let selector = `${tag}.${classList.join('.')}|other`
+      //let results = parseSelector(selector);
       let results = parseSelector(selector);
       expect(results).to.be.a('object');
       expect(results).to.have.property('preserveOther', true);
+    });
+  });
+
+  describe('#parseSelectorV2', function () {
+    it('should do something Im not sure what yet', () => {
+      let results = parseSelectorV2('+ div');
+      expect(results).to.be.a('object');
+
+      results = parseSelectorV2('div + span');
+      expect(results).to.be.a('object');
+
+      results = parseSelectorV2('~ div.sib p span ul li')
+      expect(results).to.be.a('object');
     });
   });
 

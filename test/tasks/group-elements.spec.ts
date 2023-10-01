@@ -1,10 +1,15 @@
 import groupElements from '../../src/tasks/group-elements.js';
 import { setupTest } from "../support/task-setup.js";
-import DomHelp from "../support/dom-assertions.js";
-import { inspect } from '../support/test-utils.js';
+import DomHelp, { DomAssertions } from '../support/dom-assertions.js';
+import { inspect, wrapErrCtx } from '../support/test-utils.js';
 
 import { expect } from 'chai';
 import { before, describe, it } from 'mocha';
+
+const invalids = {
+  selector: '$$^^&&^^$$',
+  noTag: '.im-just-a-class'
+}
 
 
 describe('Tasks - GroupElements', function () {
@@ -19,58 +24,78 @@ describe('Tasks - GroupElements', function () {
       wrapper: '',
     }
 
-    it('requires non-empty for "wrapper"', function () {
-      let valid = groupElements.configure(jsonConfig).validate(jsonConfig);
+    it('should require "wrapper" to be a non-empty string', function (done) {
+      let errors = groupElements
+        .configure(jsonConfig)
+        .validate(jsonConfig);
 
-      expect(valid).to.have.property('wrapper');
-      expect(valid).to.have.nested.property('wrapper.problem')
-        .that.eq('string.empty');
+      wrapErrCtx(this.test, errors, done, () => {
+        expect(errors).to.have.property('wrapper');
+        expect(errors).to.have.nested.property('wrapper.problem')
+          .that.eq('string.empty');
 
-      expect(valid).to.have.nested.property('wrapper.message')
-        .that.matches(/^\(group-elements\)/);
-
-      jsonConfig.wrapper = '&&^^##^^&&';
+        expect(errors).to.have.nested.property('wrapper.message')
+          .that.matches(/^\(group-elements\)/);
+      });
     });
 
-    it('requires valid css string for "wrapper"', function () {
-      let valid = groupElements.configure(jsonConfig).validate(jsonConfig);
+    it('should require "wrapper" to be a valid css string', function (done) {
+      let config = { ...jsonConfig, wrapper: invalids.selector };
+      let errors = groupElements
+        .configure(config)
+        .validate(config);
 
-      expect(valid).to.have.property('wrapper');
-      expect(valid).to.have.nested.property('wrapper.problem')
-        .that.eq('selector.invalid');
+      wrapErrCtx(this.test, errors, done, () => {
+        expect(errors).to.have.property('wrapper');
+        expect(errors).to.have.nested.property('wrapper.problem')
+          .that.eq('selector.invalid');
+      });
+    });
+
+    it('should require "wrapper" css string to include a tag', function (done) {
+      let config = { ...jsonConfig, wrapper: invalids.noTag };
+      let errors = groupElements
+        .configure(config)
+        .validate(config);
+
+      wrapErrCtx(this.test, errors, done, () => {
+        expect(errors).to.have.property('wrapper');
+        expect(errors).to.have.nested.property('wrapper.problem')
+          .that.eq('selector.needsTag');
+      });
     });
   });
 
-  describe.skip('Groups adjacent elements matching the selector', function () {
-    it('should create 2 new list elements', function () {
-      let taskConfig = {
-        task: 'group-elements',
-        name: 'Converts p.list-items to a proper unordered-list',
-        selector: 'p.tx.special',
-        wrapper: 'div.special-text',
-        map: {
-          'p.tx.special': 'p|all'
-        }
-      };
+  describe('Groups adjacent elements matching the selector', function () {
+    let taskConfig = {
+      task: 'group-elements',
+      name: 'Converts p.list-items to a proper unordered-list',
+      selector: 'p.tx.special',
+      wrapper: 'div.special-text',
+      map: {
+        'p.tx.special': 'p|all'
+      }
+    };
 
-      let fragment = `<div id="test-fragment">
-        <p class="tx">One - Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-        <p class="tx special">Two - Ab culpa impedit iusto molestiae necessitatibus quaerat quod soluta veniam vitae voluptas.</p>
-        <p class="tx">Three - Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
-      </div>`;
+    let fragment = `<div id="test-fragment">
+      <p class="tx">One - Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+      <p class="tx special">Two - Ab culpa impedit iusto molestiae necessitatibus quaerat quod soluta veniam vitae voluptas.</p>
+      <p class="tx">Three - Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
+    </div>`;
 
-      let { results, config, taskDef, nodes, adapter: doc } = setupTest(groupElements, taskConfig, fragment);
-      let dom = DomHelp(doc);
-      console.log(doc.body)
+    let { results, config, taskDef, nodes, adapter: doc } = setupTest(groupElements, taskConfig, fragment);
+    let dom = DomHelp(doc);
 
-      inspect(results)
-      expect(results).to.be.a('array');
-      expect(results).to.have.length(1);
-      expect(results).to.have.nested.property('[0].docChanges[0]')
-        .that.has.property('type', 'REPLACE-NODE');
+    it('should create 2 new list elements', function (done) {
+      wrapErrCtx(this.test, doc.body, done, () => {
+        expect(results).to.be.a('array');
+        expect(results).to.have.length(1);
+        expect(results).to.have.nested.property('[0].docChanges[0]')
+          .that.has.property('type', 'REPLACE-NODE');
 
-      dom.exists('div.special-text');
-      dom.exists('p.tx.special', doc.body);
+        dom.exists('div.special-text');
+        dom.exists('p.tx.special', doc.body);
+      })
     });
   });
 
@@ -96,17 +121,19 @@ describe('Tasks - GroupElements', function () {
       <p class="tx">Aliquam consectetur culpa et id ipsam molestiae natus sint voluptatibus?</p>
     </div>`;
 
-    let doc = null
+
+    let dom: DomAssertions, doc;
     before(done => {
       let { config, taskDef, nodes, adapter } = setupTest(groupElements, taskConfig, fragment);
+      dom = DomHelp(adapter);
       doc = adapter;
       done();
     })
 
-    it('should create 2 new list elements', function () {
-      let newLists = doc.query('ul.new-list');
-      expect(newLists).to.be.a('array');
-      expect(newLists).to.have.length(2);
+    it('should create 2 new list elements', function (done) {
+      wrapErrCtx(this.test, doc.body, done, () => {
+        dom.allExists('ul.new-list', 2);
+      });
     });
 
     it('should create child elements in new list elems', function () {

@@ -31,13 +31,12 @@ async function run(filename: string, opts: CleanCmdOpts) {
     }
 
     if (opts.debug) {
-
       handle = FileAdapter(
-        fileURLToPath(new URL('../test/test-output.html', import.meta.url))
+        fileURLToPath(new URL('../../../tmp/test-output.html', import.meta.url))
       );
     }
 
-    if (opts.dryrun) {
+    if (!opts.dryrun) {
       log.info(`Writing results to ${handle.target}`);
       handle.saveContents(modified_html);
     }

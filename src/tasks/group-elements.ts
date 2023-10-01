@@ -6,6 +6,7 @@ import {validators, taskSchema, validateSchema} from "./task-config.js";
 import {parseElementMap, mapNode} from "../dom/element-map.js";
 import {ParsedElementMap, parseSelector} from "../dom/index.js";
 import { parseSelectorV2 } from '../dom/selector.js';
+import { isEmpty } from 'remeda';
 
 const task_name = 'group-elements';
 
@@ -14,7 +15,7 @@ log.addContext('task', task_name);
 
 const argsSchema = {
   wrapper: validators.selector().withTag(),
-  map: validators.elementMap().keys()
+  map: validators.elementMap()
 }
 
 const validate = (args: GroupElementsArgs) => {
@@ -71,18 +72,25 @@ const GroupElements: TransformTaskType<GroupElementsArgs> = {
         next = next.get().next();
       }
 
+      // allows for selecting additional sibling elements
+      // based on selectors in config.map
       let addElems = Object.keys(config.map).filter(key => {
         return key !== args.selector;
-      }).join(', ');
+      });
 
-      log.info(`addElems: [${addElems}] and not [${args.selector}]`);
+      if (!isEmpty(addElems)) {
+        let addElemsSelector = addElems.join(', ');
 
-      while (next.isPresent()
-        && next.get().matches(addElems)
-        && !next.get().matches(args.selector)) {
-        siblings.push(next.get());
-        next = next.get().next();
+        log.info(`addElems: [${addElemsSelector}] and not [${args.selector}]`);
+
+        while (next.isPresent()
+          && next.get().matches(addElemsSelector)
+          && !next.get().matches(args.selector)) {
+          siblings.push(next.get());
+          next = next.get().next();
+        }
       }
+
 
       let mappedEls = siblings.map(sib => {
         let matchKey = mapKeys.find(key => sib.matches(key));

@@ -1,5 +1,5 @@
 import logger from '../util/log.js';
-import {AccessNode, ElementMap, ParsedElementMap, ParsedSelectorString} from "./dom.js";
+import {AccessNode, ElementMap, ParsedElementMap, SelectorComponents} from "./dom.js";
 import {parseSelector, removeNamespaces, sortSelectors} from "./selector.js";
 
 const log = logger.getLogger(import.meta.url);
@@ -17,8 +17,8 @@ export const parseElementMap = (args: ElementMap): ParsedElementMap => {
 
 export const mapNode = (
   node: AccessNode,
-  matchProps: ParsedSelectorString,
-  newProps: ParsedSelectorString): string => {
+  matchProps: SelectorComponents,
+  newProps: SelectorComponents): string => {
 
   let newTag = newProps.tag;
   let matchingCls = matchProps.classList;

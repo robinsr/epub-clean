@@ -21,7 +21,7 @@ export {
 }
 
 import type {
-  ParsedSelectorString,
+  SelectorComponents,
   ElementMap,
   ParsedElementMap,
   TagNode,
@@ -32,7 +32,7 @@ import type {
 } from './dom.js';
 
 export {
-  ParsedSelectorString,
+  SelectorComponents,
   ElementMap,
   ParsedElementMap,
   TagNode,

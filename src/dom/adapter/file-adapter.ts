@@ -1,6 +1,6 @@
 import logger from '../../util/log.js';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { Adapter, HTMLFileContents } from './../dom.js';
+import { Adapter } from './../dom.js';
 import FileDiff from '../../diff/FileDiff.js';
 import { fileURLToPath } from 'node:url';
 
@@ -12,7 +12,7 @@ class FileAdapterImpl implements Adapter {
     log.debug('Creating FileAdapter for file: ', filename);
   }
 
-  getContents(): HTMLFileContents {
+  getContents(): string {
     if (!this.filename) {
         throw new Error('No filename');
       }
@@ -33,7 +33,7 @@ class FileAdapterImpl implements Adapter {
   }
 
   get target() {
-    return fileURLToPath(this.filename);
+    return this.filename;
   }
 }
 

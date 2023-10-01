@@ -23,6 +23,10 @@ const selector_type = (joi): Joi.Extension => ({
     'selector.invalid': '{#label} {:#value} is not a valid CSS selector'
   }),
   validate(value, helpers) {
+    if (!isValidSelector(value)){
+      return { value, errors: helpers.error('selector.invalid') }
+    }
+
     if (helpers.schema.$_getFlag('allow-siblings')) {
       let p = parseSelectorV2(value);
       log.debug('parsed selector:', p);
@@ -32,10 +36,6 @@ const selector_type = (joi): Joi.Extension => ({
     if (helpers.schema.$_getFlag('tag-required')) {
       let p = parseSelectorV2(value);
       if (!p.tag) return { value, errors: helpers.error('selector.needsTag') };
-    }
-
-    if (!isValidSelector(value)){
-      return { value, errors: helpers.error('selector.invalid') }
     }
 
     return null;
@@ -127,7 +127,7 @@ export const validateSchema = (
 
   log.warn('Validation errors for task:', label);
 
-  let addLabel = str => `(${label}) ${str};`
+  let addLabel = str => `(${label}) ${str}`
 
   return error.details
     .map(err =>  ({ ...err, message: addLabel(err.message) }))

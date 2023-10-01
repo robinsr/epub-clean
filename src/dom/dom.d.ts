@@ -2,7 +2,7 @@ import { NODE_TYPES } from './adapter/node.js';
 import { Optional } from "typescript-optional";
 
 
-export interface ParsedSelectorString {
+export interface SelectorComponents {
   selector: string;
   tag: string;
   classList: string[];
@@ -17,8 +17,8 @@ export interface ElementMap {
 
 export interface ParsedElementMap {
   [key: string]: {
-    from: ParsedSelectorString;
-    to: ParsedSelectorString;
+    from: SelectorComponents;
+    to: SelectorComponents;
   }
 }
 
@@ -28,12 +28,8 @@ export interface TagNode {
   get tagSummary(): string;
 }
 
-export type HTMLFileContents = string;
-export type HTMLBodyContents = string;
-export type DomString = string;
-
 export interface Adapter {
-  getContents(): HTMLFileContents;
+  getContents(): string;
   saveContents(c: string): void;
   diffWith(u: string): void;
   get target(): string;
@@ -45,7 +41,7 @@ export interface DomAdapter {
   first: (selector: string) => AccessNode;
   get: (id: string) => AccessNode;
   contains(node: AccessNode): boolean;
-  newNode: (str: DomString) => AccessNode;
+  newNode: (str: string) => AccessNode;
   clean(): void;
 }
 

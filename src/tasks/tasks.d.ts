@@ -23,7 +23,8 @@ export interface AmendAttrAddReplaceOp {
 export interface AmendAttrRegexOp {
   op: 'regex';
   attr: string;
-  values: [ RegExp, string ];
+  match: string;
+  replace: string;
 }
 
 export interface AmendAttrRemoveOp {
