@@ -6,10 +6,10 @@
     "moduleResolution": "node16",
     "skipLibCheck": true,
     "allowJs": true,
-    "lib": ["es6", "es2021"],
+    "lib": ["es6", "es2022"],
     "types": ["node"],
-    "rootDir": "src",
-    "outDir": "lib",
+    "outDir": "tmp",
+    "rootDir": "./",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "importHelpers": true,
@@ -27,6 +27,6 @@
   },
   "include": [
     "src/**/*.ts",
-    //"test/**/*.ts"
+    "test/**/*.ts"
   ]
 }

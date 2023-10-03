@@ -26,31 +26,31 @@ program
 
 program
   // .command('clean <source>', { isDefault: true })
-  .command('clean <source>')
-  .description('process source html file (in place)')
+  .command('clean <epubfile>')
+  .aliases([ 'c', 'transform', 't' ])
+  .description('Process source html file (in place)')
   //.passThroughOptions()
   .requiredOption('-c, --config <type>', 'list of tasks to perform')
   .option('-d, --debug', 'redirect output to test/test-output.html')
   .option('-fd, --full-diff', 'prints full file diff')
   .option('--dryrun', 'does not write output')
   .option('--targets', 'prints targets to by updated without performing updates')
-  .action((filename, opts: CleanCmdOpts) => {
+  .action(async (filename, opts: CleanCmdOpts) => {
     global.__opts = opts;
-    import('./cmd/clean.js').then(clean => clean.default(filename, opts))
+    let clean = await import('./cmd/clean.js');
+    await clean.default(filename, opts);
     //return clean(filename, opts);
   });
 
 program
   .command('inspect <epubfile>')
+  .alias('i')
   .description('inspect the contents of an ePub')
   .addOption(new Option('-t, --filetype <str>', 'type of file to list').choices(Object.keys(filetype_mimes)))
   .option('-m, --manifest', 'Displays the book\'s manifest properties')
   .action(async (epubfile, opts: InspectCmdOpts) => {
-    import('./cmd/inspect-epub.js')
-      .then(async inspect => {
-          await inspect.default(epubfile, opts);
-
-      })
+    let inspect = await import('./cmd/inspect-epub.js')
+    await inspect.default(epubfile, opts);
   });
 
 program.parse();
