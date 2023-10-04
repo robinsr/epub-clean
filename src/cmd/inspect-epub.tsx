@@ -1,12 +1,24 @@
+import React from 'react';
 import { createReadStream } from 'node:fs';
-import logger from '../util/log.js';
 import enq from 'enquirer';
 import { CentralDirectory, Open, ParseOne } from 'unzipper';
 const { prompt: enquire } = enq;
 import hl from 'cli-highlight';
 import pager from 'node-pager';
-import { getMimeType, filetype_mimes, filetype_labels, FileCategory, filetype_lang } from '../epub/mimetypes.js';
+import {
+  getMimeType,
+  filetype_mimes,
+  filetype_labels,
+  FileCategory,
+  filetype_lang,
+  EpubFile,
+} from '../epub/mimetypes.js';
 import { parseManifest } from '../epub/manifest.js';
+import { InspectMenu, FileList } from './inspect.js';
+
+import { render } from 'ink';
+
+import logger from '../util/log.js';
 
 declare global {
   interface InspectCmdOpts {
@@ -19,11 +31,6 @@ const log = logger.getLogger(import.meta.url);
 
 const opf_filetype = getMimeType('.opf');
 
-interface EpubFile {
-  path: string;
-  mime: string;
-}
-
 const getEpubDir = async (filename: string): Promise<EpubFile[]> => {
   const directory = await Open.file(filename);
   //console.log('directory', directory);
@@ -33,14 +40,6 @@ const getEpubDir = async (filename: string): Promise<EpubFile[]> => {
       mime: getMimeType(file.path),
       path: file.path
     }));
-
-  // return new Promise( (resolve, reject) => {
-  //   directory.files[0]
-  //     .stream()
-  //     //.pipe(createWriteStream('firstFile'))
-  //     .on('error',reject)
-  //     .on('finish',resolve)
-  // });
 }
 
 const getEpubFile = async (epubfile: string, filename: string): Promise<string> => {
@@ -59,16 +58,18 @@ const getEpubFile = async (epubfile: string, filename: string): Promise<string> 
   })
 }
 
-const getFileType = async (): Promise<{filetype: FileCategory}> => {
-  return enquire<{filetype: FileCategory}>({
-    type: 'select',
-    name: 'filetype',
-    message: 'Select filetype to inspect',
-    choices: Object.keys(filetype_labels).map(l => ({
-      message: filetype_labels[l], name: l
-    }))
-  })
-}
+const propmts = {
+  getFileType: async (): Promise<{filetype: FileCategory}> => {
+    return enquire<{filetype: FileCategory}>({
+      type: 'select',
+      name: 'filetype',
+      message: 'Select filetype to inspect',
+      choices: Object.keys(filetype_labels).map(l => ({
+        message: filetype_labels[l], name: l
+      }))
+    })
+  }
+};
 
 async function run(filename: string, opts: InspectCmdOpts) {
   log.debug('Inspect args:', opts);
@@ -76,24 +77,22 @@ async function run(filename: string, opts: InspectCmdOpts) {
 
   let epubDir = await getEpubDir(filename);
 
-  if (opts.manifest) {
+  render(<FileList files={epubDir} />);
+
+  let mainfestInfo = async () => {
     let manifestFile = epubDir.find(file => file.mime === opf_filetype);
 
     if (manifestFile) {
       let contents = await getEpubFile(filename, manifestFile.path);
-      let manifest = await parseManifest(contents);
-
-      log.info('Book Contents:')
-
-      log.info(manifest);
-      return;
+      return await parseManifest(contents);
+    } else {
+      throw new Error(`Could not find mainfest of "${filename}"`);
     }
   }
 
-
   let filetype = opts.filetype;
   if (!opts.filetype) {
-    let selected = await getFileType();
+    let selected = await propmts.getFileType();
     filetype = selected.filetype;
   }
 
@@ -106,42 +105,6 @@ async function run(filename: string, opts: InspectCmdOpts) {
     .map(file => file.path)
     .sort();
 
-  let fileOpts = {
-    type: 'select',
-    name: 'file',
-    message: 'Select a file to inspect',
-    choices: fileList
-  }
-
-  const prompt = () => {
-    let file;
-
-    return enquire<{file: string}>(fileOpts)
-      .then(selected => {
-        file = selected.file;
-        let fileregex = new RegExp(file);
-        console.log(fileregex);
-        return getEpubFile(filename, file);
-      })
-      .then((contents) => {
-        log.info('contents for file:', file)
-        return pager(hl.highlight(contents, { language: filetype_lang[filetype] }))
-          .then(() => {
-            log.info('Exited pager')
-            return prompt();
-          })
-      })
-      .catch(err => {
-        if (err) {
-          log.fatal(err);
-        } else {
-          log.log('success', 'Exiting');
-        }
-        //return prompt();
-      })
-  }
-
-  return prompt();
 }
 
 run.filetypes = Object.keys(filetype_mimes);

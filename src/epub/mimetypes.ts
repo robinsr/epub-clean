@@ -1,5 +1,10 @@
 import mime from 'mime-types';
 
+export interface EpubFile {
+  path: string;
+  mime: string;
+}
+
 export type FileCategory = 'contents' | 'css' | 'media' | 'toc' | 'xml' | 'opf';
 
 export const getMimeType = (file: string): string => {
