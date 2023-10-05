@@ -12,6 +12,8 @@ logging:
       level: 'debug'
     dom:
       level: 'debug'
+    epub:
+      level: 'info'
     tasks:
       level: 'info'
     tasks.task-runner:

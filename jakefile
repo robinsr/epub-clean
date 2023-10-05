@@ -1,0 +1,116 @@
+#!/usr/bin/env node
+
+const { cpR, fail, rmRf, Task } = require('jake');
+const colors = require('colors');
+const { watch } = require('chokidar');
+const { join, resolve } = require('node:path');
+const { inspect } = require('node:util');
+
+
+const $echo = console.log;
+const BUILD_DIR = 'lib';
+const MAIN = join(BUILD_DIR, 'index.js');
+const ASYNC = { async: true };
+
+directory('lib');
+directory('lib/config');
+
+
+newTask('clean - removes project build directory', () => {
+  rmRf(BUILD_DIR);
+});
+
+namespace('build', function () {
+  newTask('config - Copies config files to build directory', ['lib/config'], () => {
+    jake.cpR('./config', 'lib');
+  });
+
+  newTask('ts - Compile source typescript', exec('tsc -p tsconfig-build.json'));
+
+  newTask('watch - Watch source files and compile',
+    watchTask('./src/**/*.{ts,tsx}', Task['build:compile']));
+});
+
+namespace('run', () => {
+  newTask('default - Run default config',
+    exec(`node lib/index.js inspect "${process.env.TEST_BOOK}"`));
+});
+
+namespace('test', () => {
+  let docPath = join('test/data/test-doc.html');
+
+  newTask('unit - Run unit tests', exec(['mocha']));
+
+  newTask('watch - Watch test files and run mocha',
+    watchTask('./test/**/*.{js,ts,tsx}', Task['test:unit'])
+  );
+
+  newTask('config - Test "clean" cmd with default config file (test-config.yaml)', () => {
+    Task['test:config'].invoke('test-config.yaml');
+  });
+
+  newTask('config-file - Test "clean" cmd provided config file (test/config/[filename])',
+    execWithParams(`node ${MAIN} clean ${docPath} -c test/config/%s`)
+  );
+});
+
+const WATCH_OPTS = {
+  ignoreInitial: true,
+  persistent: true
+};
+
+const EXEC_OPTS = {
+  printStderr: true,
+  printStdout: true
+}
+
+function joinArgs(args) {
+  return Array.isArray(args) ? args.join(' ') : args;
+}
+
+function execWithParams(tmpl) {
+  return async (...cliArgs) => {
+    $echo('Exec:', format(tmpl, cliArgs));
+    jake.exec(format(tmpl, cliArgs), complete, EXEC_OPTS);
+  }
+}
+
+function format(str, params) {
+  let giv = params.length;
+  let exp = str.match(/%s/g).length;
+
+  if (giv < exp) {
+    fail(`Cannot format string "${str}"; Need ${exp} params, was given ${giv}`);
+  }
+
+  let i = 0;
+  return str.replace(/%s/g, () => params[i++]);
+}
+
+function exec(args) {
+  return async () => {
+    $echo('exec:', joinArgs(args).cyan);
+    jake.exec(joinArgs(args), complete, EXEC_OPTS);
+  }
+}
+
+function watchTask(glob, target) {
+  return () => {
+    let watcher = watch(glob, WATCH_OPTS);
+    watcher
+      .on('ready', () => $echo('Watching:', watcher.getWatched()))
+      .on('change', path => {
+        $echo(`File ${path} changed`);
+        target.invoke();
+      })
+      .on('error', (...args) => {
+        console.error(args);
+      });
+  }
+}
+
+function newTask (words, ...args) {
+  let [taskName, taskDesc] = words.split(' - ').map(sect => sect.trim());
+  desc(taskDesc);
+  task(taskName, ...args);
+}

@@ -49,7 +49,7 @@ program
   .addOption(new Option('-t, --filetype <str>', 'type of file to list').choices(Object.keys(filetype_mimes)))
   .option('-m, --manifest', 'Displays the book\'s manifest properties')
   .action(async (epubfile, opts: InspectCmdOpts) => {
-    let inspect = await import('./cmd/inspect-epub.js')
+    let inspect = await import('./cmd/inspect.js')
     await inspect.default(epubfile, opts);
   });
 

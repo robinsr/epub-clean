@@ -115,7 +115,7 @@ export interface PkgAttributes {
   version: string;
 }
 
-interface EpubPackage {
+export interface EpubPackage {
   attributes: PkgAttributes;
   metadata: PkgMetadata;
   manifest: PkgManifest;
@@ -163,10 +163,10 @@ export const parseManifest = async (fileContents: string): Promise<EpubPackage> 
   let version: string = pkg.get('$.version');
 
   let metadata = pkg.get('metadata.0');
-  log.info('metadata.0:', metadata);
+  log.debug('metadata.0:', metadata);
 
   let manifest = pkg.get('manifest.0');
-  log.info('manifest.0:', manifest);
+  log.debug('manifest.0:', manifest);
 
   let metaPick = oPath(metadata);
 
@@ -178,18 +178,15 @@ export const parseManifest = async (fileContents: string): Promise<EpubPackage> 
         value: o.get(contentKey)
     }));
 
-  log.info('meta elems', metaElems);
-  log.info(metaPick.get('dc:title'))
+  log.debug('meta elems', metaElems);
+  log.debug(metaPick.get('dc:title'))
 
   let titles: DublinCoreItem<"dc:title">[] = metaPick.get('dc:title')
     .map(xmlObject)
     .map(title => {
-      let refinedBy = metaElems.find(em => em.$.refines === '#' + title.getAttr('$id'))
-      return { label: 'dc:title', value: title.getContent(), id: title.getAttr('$id'), refinedBy }
+      //let refinedBy = metaElems.find(em => em.$.refines === '#' + title.getAttr('$id'))
+      return { label: 'dc:title', value: title.getContent(), id: title.getAttr('$id') }
     });
-
-  log.info(titles)
-
 
   return {
     attributes: {

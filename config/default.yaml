@@ -30,6 +30,8 @@ logging:
       <<: *log-cat
     dom:
       <<: *log-cat
+    epub:
+      <<: *log-cat
     tasks:
       <<: *log-cat
     difflog:

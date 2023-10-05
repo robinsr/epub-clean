@@ -3,7 +3,7 @@
 
 BUILD_DIR = lib
 
-all: clean copy-config compile test-compile build watch run-map run-nomap make-run
+all: clean copy-config compile test-compile build watch watch-time run-map run-nomap make-run
 .PHONY: all
 
 clean:
@@ -16,57 +16,56 @@ copy-config:
 compile:
 	tsc -p tsconfig-build.json
 
-test-compile:
+compile-test:
 	tsc -p tsconfig.json
 
 build: compile copy-config
 
 watch:
-	tsc -w -p tsconfig.json
+	fswatch -r -l 10 src | xargs -I {} make build
 
 relink: compile copy-config
 	@echo 'Relinking file'
 	npm link
+	chmod +x ${BUILD_DIR}/index.js
 
 # RUNNING DEVELOPMENT
 
-run_path = NODE_ENV=$(NODE_ENV) $(shell which node) ${BUILD_DIR}/index.js$(1)$(2)$(3)
+define run_path
+NODE_ENV=$(NODE_ENV) $(shell which node) ${BUILD_DIR}/index.js$(1)$(2)$(3)
+endef
+
 test_doc = test/data/test-doc.html
-config_yaml = test/config/test-config.yaml
-config_json = test/config/test-config.json
-config_json5 = test/config/test-config.json5
 
 run:
 	node --enable-source-maps lib/index.js
 
 run-nomap:
-	node build/src/index.js
+	node lib/index.js
 
 # TESTING
-all_test: unit-test-test watch-test test-%
+all_test: unit-test watch-test test-%
 .PHONY: all_test
 
+%-test: NODE_ENV=test
 unit-test:
 	mocha
 
 watch-test:
-	mocha --watch --watch-file *.ts
+	fswatch -o -r src test/**/*.spec.ts | xargs -n1 -I{} make unit-test
 
-test-%: NODE_ENV=prod
+test-%: NODE_ENV=development
 test-basic: build
-	$(call run_path, clean, $(test_doc), -d -c ${config_json})
+	$(call run_path, clean, ${test_doc}, -d -c test/config/test-config.json)
 
 test-json5: build
-	$(call run_path, clean, $(test_doc), -d -c ${config_json5})
+	$(call run_path, clean, ${test_doc}, -d -c test/config/test-config.json5)
 
 test-yaml: build
-	$(call run_path, clean, $(test_doc), -d -c ${config_yaml})
-
-test-diff: build
-	$(call run_path, clean, $(test_doc), -d -fd -c ${config_json})
+	$(call run_path, clean, ${test_doc}, -d -c test/config/test-config.yaml)
 
 test-edge-case: build
-	$(call run_path, clean, $(test_doc), -d -c test/config/edge-case-config.json)
+	$(call run_path, clean, ${test_doc}, -d -c test/config/edge-case-config.json)
 
 test-manifest: build
 	echo $$TEST_BOOK

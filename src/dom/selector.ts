@@ -111,7 +111,7 @@ type ParseContext = 'selector' | 'selectorList';
 
 /**
  * Parses css selector string using CSS-Tree and
- * returns css selector components
+ * returns css selector screens
  */
 export const parseSelectorV2 = (selector: string): SelectorComponents => {
   log.debug(`Parsing selector string "${selector}" (v2)`);
