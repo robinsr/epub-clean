@@ -4,11 +4,11 @@ import {
   parseSelector,
   removeNamespaces,
   sortSelectors
-} from '../../src/dom/index.js';
+} from '../../../src/dom/index.js';
 import {clamp, range, times, values} from "remeda";
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
-import { parseSelectorV2 } from '../../src/dom/selector.js';
+import { parseSelectorV2 } from '../../../src/dom/selector.js';
 
 
 const css = {

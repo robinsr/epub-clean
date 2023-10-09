@@ -7,7 +7,7 @@
     "esnub": "./lib/index.js"
   },
   "scripts": {
-    "debug": "make test-manifest",
+    "debug": "node lib/index.js clean test/functional/test-doc.html -c test/config/test-config.json ",
     "jake": "jake -f jakefile.cjs"
   },
   "type": "module",

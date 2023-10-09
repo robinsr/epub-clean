@@ -6,6 +6,8 @@ import { EpubFile } from '../../epub/mimetypes.js';
 import { sortByGetter } from '../../util/sort.js';
 import { isNonNull } from 'remeda';
 import ActionMenu from './ActionMenu.js';
+import LayoutRow from './LayoutRow.js';
+import LayoutColumn from './LayoutColumn.js';
 
 let fileSorter = sortByGetter<EpubFile>(e => {
     return basename(e.path, extname(e.path));
@@ -13,15 +15,17 @@ let fileSorter = sortByGetter<EpubFile>(e => {
 
 type FileListProps = {
   files: EpubFile[];
-  filter: string; // mimetype
+  selectedFile: EpubFile;
+  filter?: string; // mimetype
+  isVisible: boolean;
   onBack: () => void;
-  onSelect: (file: EpubFile, action: string) => void;
+  onSelect: (file: EpubFile) => void;
+  onAction: (action: string) => void;
   onQuit: () => void;
 }
 
-const FileList = ({ files = [], filter, onBack, onSelect, onQuit }: FileListProps) => {
+const FileList = ({ files = [], isVisible, selectedFile, onAction, onBack, onSelect, onQuit }: FileListProps) => {
   const { isFocused } = useFocus({ id: 'file-list' });
-  const [ selectedFile, setSelectedFile ] = useState<EpubFile>(null);
 
   const [ highlighted, setHighlighted ] = useState({
     label: null, value: null
@@ -47,10 +51,14 @@ const FileList = ({ files = [], filter, onBack, onSelect, onQuit }: FileListProp
     if (key.rightArrow) {
       handleSelect(highlighted);
     }
+
+    if (selectedFile) {
+      return;
+    }
   });
 
   const handleSelect = item => {
-		setSelectedFile(files.find(file => file.path === item.value));
+		onSelect(files.find(file => file.path === item.value));
 	};
 
   const handleHighlight = item => {
@@ -58,48 +66,53 @@ const FileList = ({ files = [], filter, onBack, onSelect, onQuit }: FileListProp
   }
 
   const doWithFile = (action: string) => {
-    onSelect(selectedFile, action);
-    setSelectedFile(null);
+    onAction(action);
   }
 
   let items = files.sort(fileSorter).map(file => ({
     label: file.path, value: file.path
   }));
 
-  let fileOptions = [ 'View', 'Reformat', 'Delete', 'View Selectors' ];
+  let fileActions = [
+    { label: 'View', value: 'view-file' },
+    { label: 'List Selectors', value: 'list-selectors' },
+    { label: 'Reformat', value: 'format' },
+    { label: 'Delete', value: 'delete' },
+  ];
 
-  if (!files.length) {
+  if (!isVisible) {
     return null;
   }
 
   return (
-    <Box
-      borderStyle="round"
-      borderColor={isFocused ? 'blueBright' : 'blue'}
-      flexDirection="column"
-      paddingLeft={1}
-      paddingRight={1}>
-      <Box flexDirection="row" borderStyle="round">
-        <Text>{selectedFile ? selectedFile.path : 'No file Selected'}</Text>
-        <Box width={50}>
-          <SelectInput
-            limit={12}
-            items={items}
-            isFocused={!selectedFile}
-            onSelect={handleSelect}
-            onHighlight={handleHighlight}/>
+    <>
+      <LayoutColumn>
+        <Box>
+          <Text>{selectedFile ? selectedFile.path : 'No file Selected'}</Text>
         </Box>
-        <Box width={50}>
-          <ActionMenu
-            name={`action-menu-${selectedFile ? selectedFile.path : 'nothing'}`}
-            options={fileOptions}
-            isVisible={isNonNull(selectedFile)}
-            isFocused={isNonNull(selectedFile)}
-            onSelect={doWithFile}
-            onBack={() => setSelectedFile(null)}/>
+        <Box>
+          <LayoutRow>
+            <Box flexGrow={0}>
+              <SelectInput
+                limit={12}
+                items={items}
+                isFocused={!selectedFile}
+                onSelect={handleSelect}
+                onHighlight={handleHighlight}/>
+            </Box>
+            <Box flexGrow={0}>
+              <ActionMenu
+                label={selectedFile ? selectedFile.path : 'no label'}
+                options={fileActions}
+                isVisible={isNonNull(selectedFile)}
+                isFocused={isNonNull(selectedFile)}
+                onSelect={doWithFile}
+                onBack={onBack}/>
+            </Box>
+          </LayoutRow>
         </Box>
-      </Box>
-    </Box>
+      </LayoutColumn>
+    </>
   );
 }
 

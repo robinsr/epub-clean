@@ -1,4 +1,4 @@
-import { AccessNode, DomAdapter } from '../../src/dom/index.js';
+import { AccessNode, DomAdapter } from '../../../src/dom/index.js';
 import { expect } from 'chai';
 
 const expectToExist = (el, q, msg?: string) => {

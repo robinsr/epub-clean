@@ -23,9 +23,8 @@
   attrs:
   - op: regex
     attr: class
-    values:
-    - "\\s?calibre[\\d]\\s?"
-    - ''
+    match: '\s?calibre[\d]\s?'
+    replace: ''
 - name: X - TODO - Alternate remove calibre classes
   task: map-elements
   selector: '[class^="calibre"]'

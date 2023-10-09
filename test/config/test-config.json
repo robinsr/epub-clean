@@ -30,7 +30,8 @@
       {
         "op": "regex",
         "attr": "class",
-        "values": [ "\\s?calibre[\\d]\\s?", "" ]
+        "match": "\\s?calibre[\\d]\\s?",
+        "replace": ""
       }
     ]
   }, {

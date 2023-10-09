@@ -30,12 +30,14 @@
       {
         op: 'regex',
         attr: 'class',
-        values: [ '\s?calibre[\d]\s?', '' ]
+        match:'\s?calibre[\d]\s?',
+        replace: ''
       },
       {
         op: 'regex',
         attr: 'class',
-        values: [ 'calibre7', '' ]
+        match: 'calibre7',
+        replace: ''
       }
     ]
   }, {
@@ -70,7 +72,7 @@
     name: 'Remove extra <span>',
     task: 'remove-elements',
     selector: 'span:not([class]):not([id])',
-    'keep-content': true
+    keep-content: true
   }, {
     name: 'X - TODO - Group list items',
     task: 'group-elements',

@@ -1,4 +1,4 @@
-import groupElements from '../../src/tasks/group-elements.js';
+import groupElements from '../../../src/tasks/group-elements.js';
 import { setupTest } from "../support/task-setup.js";
 import DomHelp, { DomAssertions } from '../support/dom-assertions.js';
 import { inspect, wrapErrCtx } from '../support/test-utils.js';

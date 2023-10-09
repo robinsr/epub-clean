@@ -1,6 +1,6 @@
-import AmendAttrs from '../../src/tasks/amend-attrs.js';
+import AmendAttrs from '../../../src/tasks/amend-attrs.js';
+import { AmendAttrArgs, AmendAttrOp, ValidationResult } from '../../../src/tasks/tasks.js';
 import { setupTest } from '../support/task-setup.js';
-import { AmendAttrArgs, AmendAttrOp, ValidationResult } from '../../src/tasks/tasks.js';
 import { wrap, wrapErrCtx } from '../support/test-utils.js';
 import { expect } from 'chai';
 import DomAssertions from '../support/dom-assertions.js';

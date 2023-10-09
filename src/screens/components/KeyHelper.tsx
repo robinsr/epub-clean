@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 
 const KeyHelper = () => {
   const [ theKey, setTheKey ] = useState({
@@ -26,7 +26,9 @@ const KeyHelper = () => {
   }
 
   return (
-    <Text>{display(theKey.key, theKey.metas)}</Text>
+    <Box>
+      <Text>{display(theKey.key, theKey.metas)}</Text>
+    </Box>
   );
 }
 

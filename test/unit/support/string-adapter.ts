@@ -1,4 +1,4 @@
-import { Adapter } from "../../src/dom/dom.js";
+import { Adapter } from "../../../src/dom/dom.js";
 
 const htmlstring = fragment => `<!DOCTYPE html>
 <html lang="en">

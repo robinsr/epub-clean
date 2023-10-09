@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import {before, describe, it} from 'mocha';
 import { wrapErrCtx } from '../support/test-utils.js'
 
-import { taskSchema, validators, validateSchema } from '../../src/tasks/task-config.js';
+import { taskSchema, validators, validateSchema } from '../../../src/tasks/task-config.js';
 
 
 const valid_task = {

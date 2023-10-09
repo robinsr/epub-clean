@@ -4,8 +4,8 @@ const { cpR, fail, rmRf, Task } = require('jake');
 const colors = require('colors');
 const { watch } = require('chokidar');
 const { join, resolve } = require('node:path');
-const { inspect } = require('node:util');
-
+const { inspect, format } = require('node:util');
+const url = require('node:url');
 
 const $echo = console.log;
 const BUILD_DIR = 'lib';
@@ -27,8 +27,13 @@ namespace('build', function () {
 
   newTask('ts - Compile source typescript', exec('tsc -p tsconfig-build.json'));
 
+  newTask('all - Builds the project', [
+    'build:config',
+    'build:ts'
+  ], exec('chmod +x lib/index.js'));
+
   newTask('watch - Watch source files and compile',
-    watchTask('./src/**/*.{ts,tsx}', Task['build:compile']));
+    watchTask('./src/**/*.{ts,tsx}', Task['build:all']));
 });
 
 namespace('run', () => {
@@ -37,7 +42,7 @@ namespace('run', () => {
 });
 
 namespace('test', () => {
-  let docPath = join('test/data/test-doc.html');
+  let docPath = join('test/functional/test-doc.html');
 
   newTask('unit - Run unit tests', exec(['mocha']));
 
@@ -70,21 +75,9 @@ function joinArgs(args) {
 
 function execWithParams(tmpl) {
   return async (...cliArgs) => {
-    $echo('Exec:', format(tmpl, cliArgs));
-    jake.exec(format(tmpl, cliArgs), complete, EXEC_OPTS);
+    $echo('Exec:', format(tmpl, ...cliArgs));
+    jake.exec([format(tmpl, ...cliArgs)], complete, EXEC_OPTS);
   }
-}
-
-function format(str, params) {
-  let giv = params.length;
-  let exp = str.match(/%s/g).length;
-
-  if (giv < exp) {
-    fail(`Cannot format string "${str}"; Need ${exp} params, was given ${giv}`);
-  }
-
-  let i = 0;
-  return str.replace(/%s/g, () => params[i++]);
 }
 
 function exec(args) {
@@ -98,7 +91,9 @@ function watchTask(glob, target) {
   return () => {
     let watcher = watch(glob, WATCH_OPTS);
     watcher
-      .on('ready', () => $echo('Watching:', watcher.getWatched()))
+      .on('ready', () => {
+        $echo(`Watching "${glob}" (${countFiles(watcher.getWatched())} files)`);
+      })
       .on('change', path => {
         $echo(`File ${path} changed`);
         target.invoke();
@@ -113,4 +108,10 @@ function newTask (words, ...args) {
   let [taskName, taskDesc] = words.split(' - ').map(sect => sect.trim());
   desc(taskDesc);
   task(taskName, ...args);
+}
+
+function countFiles(files) {
+  return Object.entries(files)
+    .map(([k, vals]) => vals.length)
+    .reduce((total, list) => total + list, 0);
 }

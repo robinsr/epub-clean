@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { setupTest } from "../support/task-setup.js";
 import DomHelp from "../support/dom-assertions.js";
 
-import mapElements from '../../src/tasks/map-elements.js';
+import mapElements from '../../../src/tasks/map-elements.js';
 
 
 const getTask = (name, selector, args) => ({

@@ -7,26 +7,29 @@ import { extractFile, getDirectoryList, getManifest } from '../epub/fs.js';
 import { EpubFile } from '../epub/mimetypes.js';
 import { EpubPackage } from '../epub/manifest.js';
 
-interface MenuOpts {
-  label: string;
-  value: string | number;
-}
-
 declare global {
   interface InspectCmdOpts {
     // manifest: boolean;
     // filetype?: FileCategory;
   }
 
-  interface InspectState {
-    epub: {
-      path: string;
-      dir: EpubFile[];
-      manifest: EpubPackage
-    },
+  interface InspectData {
+    path: string;
+    dir: EpubFile[];
+    manifest: EpubPackage
+  }
+
+  interface InspectUI {
     files: EpubFile[];
+    showFiles: boolean;
     selectedFile: EpubFile | null;
-    menuOptions: MenuOpts[]
+    selectedAction: string | null;
+    message: object | null;
+  }
+
+  interface InspectState {
+    epub: InspectData;
+    ui: InspectUI;
   }
 
   interface MenuOption {
@@ -36,12 +39,6 @@ declare global {
 }
 
 const log = logger.getLogger(import.meta.url);
-
-const menuOptions = [
-  { label: 'View Manifest (.opf file)', value: 'manifest' },
-  { label: 'Configure transforms', value: 'config' },
-  { label: 'Browse Contents', value: 'browse' }
-];
 
 async function run(filename: string, opts: InspectCmdOpts) {
   let epubDir = await getDirectoryList(filename);
@@ -53,9 +50,13 @@ async function run(filename: string, opts: InspectCmdOpts) {
       dir: epubDir,
       manifest: manifest
     },
-    files: [],
-    selectedFile: null,
-    menuOptions
+    ui: {
+      files: [],
+      showFiles: false,
+      selectedFile: null,
+      selectedAction: null,
+      message: null
+    }
   };
 
   renderScreen(InspectScreen, { initialState });

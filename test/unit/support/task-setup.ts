@@ -2,14 +2,14 @@ import {
   AccessNode,
   DomAdapter,
   JSDOMAdapter
-} from "../../src/dom/index.js";
+} from "../../../src/dom/index.js";
 import {
   TaskDefinition,
   TransformTaskType
-} from "../../src/tasks/tasks.js";
+} from "../../../src/tasks/tasks.js";
 
 import StringAdapter from "./string-adapter.js";
-import TaskResult from '../../src/tasks/task-result.js';
+import TaskResult from '../../../src/tasks/task-result.js';
 
 
 interface SetupResult {

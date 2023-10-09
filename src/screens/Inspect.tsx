@@ -1,88 +1,141 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { Box, Spacer, Text, useApp, useFocus, useInput } from 'ink';
-import SelectInput from 'ink-select-input';
-import { basename, extname } from 'node:path';
-import { EpubFile } from '../epub/mimetypes.js';
-import { sortByGetter } from '../util/sort.js';
-import { inspect } from 'node:util';
-import KeyHelper from './components/KeyHelper.js';
 import { isNonNull, isEmpty } from 'remeda';
 import FileList from './components/FileList.js';
 import ActionMenu from './components/ActionMenu.js';
+import LayoutColumn from './components/LayoutColumn.js';
+import LayoutRow from './components/LayoutRow.js';
+import { ActionLogger } from './components/action-logger.js';
+
+interface Action {
+  type: string;
+  data?: object;
+}
+
+interface MenuSelectAction extends Action {
+  type: 'MENU_SELECT',
+  data: {
+    menuName: string;
+    selectedValue: any;
+  }
+}
+
+interface BackAction extends Action {
+  type: 'BACK';
+}
+
+type InspectAction = MenuSelectAction | BackAction;
+
+
+const inspectReducer = (state: InspectState, action: InspectAction): InspectState => {
+  let newState = { ...state };
+
+  newState.ui.message = action;
+
+  if (action.type === 'MENU_SELECT') {
+    switch (action.data.menuName) {
+      case 'InspectOptions':
+        newState.ui.files = state.epub.dir;
+        newState.ui.showFiles = true;
+        break;
+      case 'FileSelect':
+        newState.ui.selectedFile = state.epub.dir.find(f => {
+          return f.path === action.data.selectedValue
+        });
+        break;
+      case 'FileAction':
+        newState.ui.selectedAction = action.data.selectedValue;
+        break;
+    }
+
+    return newState;
+  }
+
+  if (action.type === 'BACK') {
+    if (state.ui.selectedFile) {
+      newState.ui.selectedFile = null;
+    }
+
+    if (state.ui.files) {
+      newState.ui.files = [];
+      newState.ui.showFiles = false;
+    }
+
+    return newState;
+  }
+
+  throw Error('Unknown action');
+}
+
+const inspectCmdMenu = [
+  { label: 'View Manifest (.opf file)', value: 'manifest' },
+  { label: 'Configure transforms', value: 'config' },
+  { label: 'Browse Contents', value: 'browse' },
+];
 
 
 export type InspectScreenProps = {
   initialState: InspectState;
 }
-
 const InspectScreen = ({ initialState }: InspectScreenProps) => {
   const { exit } = useApp();
   const { isFocused } = useFocus();
-  const [ appState, setAppState ] = useState(initialState);
-  const [ nextAction, setNextAction ] = useState(null);
+  const [ state, dispatch ] = useReducer(inspectReducer, initialState);
 
-  let { epub, files, selectedFile, menuOptions } = appState;
-
-  const handleResult = (file: EpubFile, action: string) => {
-    let newState = { ...appState };
-    newState.selectedFile = file;
-    setAppState(newState);
-    setNextAction(null);
-  }
-
-  const handleMenuSelect = (action: string) => {
-    let newState = { ...appState };
-    newState.files = epub.dir;
-    setAppState(newState);
-    setNextAction(action);
-
-    if (action === menuOptions[2].label) {
-      // do something with browse contents
-    }
-  }
-
-  const clearFiles = () => {
-    let newState = { ...appState };
-    newState.files = [];
-    setAppState(newState);
-    setNextAction(null);
-  }
+  let { epub, ui } = state;
+  let { message, files, selectedFile, showFiles, selectedAction } = ui;
 
 
   return (
-    <Box
-      borderStyle="round"
-      borderColor={isFocused ? 'blueBright' : 'blue'}
-      flexDirection="column"
-      width="100%"
-      height="100%"
-      justifyContent={'flex-end'}
-      alignItems={'stretch'}>
+    <LayoutColumn borderColor="blue" borderStyle="round">
       <Box>
-        <Text>Line 1</Text>
-        <Text>Line 2</Text>
-        <Text>Line 3</Text>
-        <Text>Line 4</Text>
         { selectedFile ?
-          <Text>Nice! Let's "{nextAction}" on file "{selectedFile.path}"</Text> :
+          <Text>Nice! Let's "{selectedAction}" on file "{selectedFile.path}"</Text> :
           <Text>Waiting for selection</Text>
         }
       </Box>
-      <Box>
-        <ActionMenu
-          isVisible={!isNonNull(nextAction)}
-          isFocused={!isNonNull(nextAction)}
-          options={menuOptions.map(i => i.label)}
-          onSelect={handleMenuSelect}
-          onBack={exit}/>
-        <FileList
-          files={files}
-          filter={null}
-          onBack={clearFiles}
-          onSelect={handleResult}
-          onQuit={exit} />
+      <LayoutColumn borderColor="red" borderStyle="round">
+        <Box>
+          <ActionMenu
+            label="Inspect Options"
+            isVisible={!isNonNull(selectedAction) && files.length === 0}
+            isFocused={!isNonNull(selectedAction) && files.length === 0}
+            options={inspectCmdMenu}
+            onSelect={item => dispatch({
+              type: 'MENU_SELECT',
+              data: {
+                menuName: 'InspectOptions',
+                selectedValue: item
+              }
+            })}
+            onBack={exit}/>
+          <FileList
+            files={files}
+            filter={null}
+            isVisible={files.length > 0}
+            selectedFile={selectedFile}
+            onBack={() => dispatch({ type: 'BACK' })}
+            onAction={action => dispatch({
+              type: 'MENU_SELECT',
+              data: {
+                menuName: 'FileAction',
+                selectedValue: action
+              }
+            })}
+            onSelect={item => dispatch({
+              type: 'MENU_SELECT',
+              data: {
+                menuName: 'FileSelect',
+                selectedValue: item.path
+              }
+            })}
+            onQuit={exit} />
+        </Box>
+      </LayoutColumn>
+      <Box width={50} borderColor="red">
+        <ActionLogger message={message} />
       </Box>
-    </Box>
+    </LayoutColumn>
   );
 }
 

@@ -2,6 +2,10 @@ import React, { useState, useEffect} from 'react';
 import { Box, Newline, Spacer, Text, useApp, useFocus, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 
+export interface MenuOpts {
+  label: string;
+  value: string;
+}
 
 export interface Selection<T> {
   object: T;
@@ -9,19 +13,23 @@ export interface Selection<T> {
 }
 
 type ActionMenuProps = {
-  name?: string;
+  label?: string;
   isVisible: boolean;
-  options: string[];
+  options: string[] | MenuOpts[]
   isFocused: boolean;
   onSelect: (s: string) => void;
   onBack: () => void;
 }
-const ActionMenu = ({ isVisible, options, name = 'no-name-action-menu', onBack, onSelect }: ActionMenuProps) => {
+const ActionMenu = ({ isVisible, options, label, onBack, onSelect }: ActionMenuProps) => {
 
-  const { isFocused: hasFocus } = useFocus({ id: name });
+  const { isFocused: hasFocus } = useFocus({ id: label });
 
   let selectOptions = options.map(opt => {
-    return { label: opt as string, value: opt };
+    if (opt.value && opt.label) {
+      return opt;
+    } else {
+      return { label: opt as string, value: opt };
+    }
   });
 
   useInput((input, key) => {
@@ -48,8 +56,12 @@ const ActionMenu = ({ isVisible, options, name = 'no-name-action-menu', onBack, 
 
   return (
     <Box flexDirection="column" borderStyle="round" borderColor={hasFocus ? 'blueBright' : 'blue'}>
-      <Text color={'gray'}>Vis: {isVisible ? 'vis' : 'not-vis'}; Name: {name}</Text>
-      <SelectInput items={selectOptions} onSelect={handleSelect} />
+      <Box flexGrow={0}>
+        {label ? <Text color={'gray'}>{label}</Text> : null}
+      </Box>
+      <Box flexGrow={1}>
+        <SelectInput items={selectOptions} onSelect={handleSelect} />
+      </Box>
     </Box>
   );
 }
