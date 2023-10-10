@@ -14,7 +14,7 @@ export const LayoutRow: FunctionComponent<RowProps> = ({
 
   let isFocused = false;
   if (focusBorder) {
-    isFocused = useFocus().isFocused;
+    isFocused = useFocus({ isActive: false }).isFocused;
   }
 
   return (

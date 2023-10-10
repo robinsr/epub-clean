@@ -1,8 +1,6 @@
+import logger from '../util/log.js';
 import renderScreen from '../screens/App.js';
 import InspectScreen from '../screens/Inspect.js';
-
-
-import logger from '../util/log.js';
 import { extractFile, getDirectoryList, getManifest } from '../epub/fs.js';
 import { EpubFile } from '../epub/mimetypes.js';
 import { EpubPackage } from '../epub/manifest.js';
@@ -13,28 +11,28 @@ declare global {
     // filetype?: FileCategory;
   }
 
-  interface InspectData {
+  interface EpubContext {
     path: string;
     dir: EpubFile[];
     manifest: EpubPackage
   }
 
+  interface MenuSelections {
+    subcommand?: string;
+    file?: EpubFile;
+    action?: string | null;
+  }
+
   interface InspectUI {
     files: EpubFile[];
     showFiles: boolean;
-    selectedFile: EpubFile | null;
-    selectedAction: string | null;
     message: object | null;
   }
 
   interface InspectState {
-    epub: InspectData;
+    epub: EpubContext;
+    selections: MenuSelections;
     ui: InspectUI;
-  }
-
-  interface MenuOption {
-    label: string;
-    value: string;
   }
 }
 
@@ -50,11 +48,10 @@ async function run(filename: string, opts: InspectCmdOpts) {
       dir: epubDir,
       manifest: manifest
     },
+    selections: {},
     ui: {
       files: [],
       showFiles: false,
-      selectedFile: null,
-      selectedAction: null,
       message: null
     }
   };

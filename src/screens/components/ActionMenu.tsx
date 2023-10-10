@@ -1,6 +1,7 @@
 import React, { useState, useEffect} from 'react';
 import { Box, Newline, Spacer, Text, useApp, useFocus, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
+import useBorderFocus from '../hooks/useBorderFocus.js';
 
 export interface MenuOpts {
   label: string;
@@ -13,16 +14,18 @@ export interface Selection<T> {
 }
 
 type ActionMenuProps = {
+  id: string;
   label?: string;
-  isVisible: boolean;
   options: string[] | MenuOpts[]
-  isFocused: boolean;
+  isActive: boolean;
   onSelect: (s: string) => void;
   onBack: () => void;
 }
-const ActionMenu = ({ isVisible, options, label, onBack, onSelect }: ActionMenuProps) => {
+const ActionMenu = ({ id, label, options, isActive, onBack, onSelect }: ActionMenuProps) => {
 
-  const { isFocused: hasFocus } = useFocus({ id: label });
+  const { isFocused, borders } = useBorderFocus({ id, isActive });
+
+  const heading = `${label} (${isFocused})`;
 
   let selectOptions = options.map(opt => {
     if (opt.value && opt.label) {
@@ -33,34 +36,38 @@ const ActionMenu = ({ isVisible, options, label, onBack, onSelect }: ActionMenuP
   });
 
   useInput((input, key) => {
-    if (!hasFocus) {
+    if (!isFocused) {
       return;
     }
 
     if (input === 'b') {
       onBack();
+      return;
     }
 
     if (key.leftArrow) {
       onBack();
+      return;
     }
-  });
+  }, { isActive: isFocused });
 
   const handleSelect = item => {
     onSelect(item.value);
   }
 
-  if (!isVisible) {
-    return null;
-  }
-
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor={hasFocus ? 'blueBright' : 'blue'}>
-      <Box flexGrow={0}>
-        {label ? <Text color={'gray'}>{label}</Text> : null}
-      </Box>
+    <Box flexDirection="column" {...borders}>
+        {label ?
+          <Box flexGrow={0}>
+            <Text color={'gray'}>
+              {heading}
+              <Newline />
+              {'-'.repeat(heading.length)}
+            </Text>
+          </Box>
+          : null}
       <Box flexGrow={1}>
-        <SelectInput items={selectOptions} onSelect={handleSelect} />
+        <SelectInput items={selectOptions} onSelect={handleSelect} isFocused={isFocused} />
       </Box>
     </Box>
   );

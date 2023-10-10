@@ -8,24 +8,27 @@ import { isNonNull } from 'remeda';
 import ActionMenu from './ActionMenu.js';
 import LayoutRow from './LayoutRow.js';
 import LayoutColumn from './LayoutColumn.js';
+import { Action } from '../reducers/actions.js';
+import useBorderFocus from '../hooks/useBorderFocus.js';
 
 let fileSorter = sortByGetter<EpubFile>(e => {
     return basename(e.path, extname(e.path));
 });
 
 type FileListProps = {
+  dispatch: React.Dispatch<Action>;
+  label: string;
   files: EpubFile[];
   selectedFile: EpubFile;
   filter?: string; // mimetype
-  isVisible: boolean;
   onBack: () => void;
   onSelect: (file: EpubFile) => void;
   onAction: (action: string) => void;
   onQuit: () => void;
 }
 
-const FileList = ({ files = [], isVisible, selectedFile, onAction, onBack, onSelect, onQuit }: FileListProps) => {
-  const { isFocused } = useFocus({ id: 'file-list' });
+const FileList = ({ dispatch, label, files = [], selectedFile, onAction, onBack, onSelect, onQuit }: FileListProps) => {
+  const { isFocused, borders } = useBorderFocus({ autoFocus: true, id: label });
 
   const [ highlighted, setHighlighted ] = useState({
     label: null, value: null
@@ -55,7 +58,7 @@ const FileList = ({ files = [], isVisible, selectedFile, onAction, onBack, onSel
     if (selectedFile) {
       return;
     }
-  });
+  }, { isActive: isFocused });
 
   const handleSelect = item => {
 		onSelect(files.find(file => file.path === item.value));
@@ -74,45 +77,39 @@ const FileList = ({ files = [], isVisible, selectedFile, onAction, onBack, onSel
   }));
 
   let fileActions = [
-    { label: 'View', value: 'view-file' },
+    { label: 'View File', value: 'view-file' },
     { label: 'List Selectors', value: 'list-selectors' },
+    { label: 'Preview Changes', value: 'show-diff' },
     { label: 'Reformat', value: 'format' },
     { label: 'Delete', value: 'delete' },
   ];
 
-  if (!isVisible) {
-    return null;
-  }
-
   return (
-    <>
-      <LayoutColumn>
-        <Box>
-          <Text>{selectedFile ? selectedFile.path : 'No file Selected'}</Text>
-        </Box>
-        <Box>
-          <LayoutRow>
-            <Box flexGrow={0}>
-              <SelectInput
-                limit={12}
-                items={items}
-                isFocused={!selectedFile}
-                onSelect={handleSelect}
-                onHighlight={handleHighlight}/>
-            </Box>
+    <LayoutColumn>
+      <Box>
+        <LayoutRow>
+          <Box flexGrow={0} {...borders}>
+            <SelectInput
+              limit={12}
+              items={items}
+              isFocused={isFocused}
+              onSelect={handleSelect}
+              onHighlight={handleHighlight}/>
+          </Box>
+          {selectedFile ?
             <Box flexGrow={0}>
               <ActionMenu
-                label={selectedFile ? selectedFile.path : 'no label'}
+                id="FileActions"
+                label={'Options for ' + selectedFile.path}
                 options={fileActions}
-                isVisible={isNonNull(selectedFile)}
-                isFocused={isNonNull(selectedFile)}
+                isActive={isNonNull(selectedFile)}
                 onSelect={doWithFile}
                 onBack={onBack}/>
             </Box>
-          </LayoutRow>
-        </Box>
-      </LayoutColumn>
-    </>
+          : null}
+        </LayoutRow>
+      </Box>
+    </LayoutColumn>
   );
 }
 

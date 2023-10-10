@@ -10,23 +10,29 @@ const inspect_opts = {
 
 type ActionLoggerProps = {
   message?: object;
-  messages?: string[]
+  messages?: string[];
 };
-export const ActionLogger: React.FC<ActionLoggerProps> = ({ message, messages }) => {
+export const ActionLogger: React.FC<ActionLoggerProps> = ({
+  message, messages
+}) => {
   const debug = useContext(DebugContext);
 
-  let borders = {};
+  let borders = {}
 
   if (debug.flexBorders) {
     borders = {
-      borderStyle: 'rounded',
+      borderStyle: 'round',
       borderColor: 'red'
     }
   }
 
+  if (!message) {
+    return null;
+  }
+
   return (
     <Box {...borders}>
-      <Text>{inspect(message, inspect_opts) || 'no message'}</Text>
+      <Text>{inspect(message, inspect_opts)}</Text>
     </Box>
   );
 };

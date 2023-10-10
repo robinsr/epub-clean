@@ -5,7 +5,7 @@ export interface DebugProps {
 }
 
 export const debugSettings: DebugProps = {
-  flexBorders: false
+  flexBorders: true
 }
 
 const DebugContext = createContext<DebugProps>(debugSettings);

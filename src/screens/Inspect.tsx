@@ -1,135 +1,96 @@
-import React, { useState, useEffect, useReducer } from 'react';
-import { Box, Spacer, Text, useApp, useFocus, useInput } from 'ink';
+import React, { useState, useEffect, useReducer, useMemo } from 'react';
+import { Box, Text, useFocusManager, useApp, useFocus, useInput } from 'ink';
 import { isNonNull, isEmpty } from 'remeda';
 import FileList from './components/FileList.js';
 import ActionMenu from './components/ActionMenu.js';
 import LayoutColumn from './components/LayoutColumn.js';
-import LayoutRow from './components/LayoutRow.js';
-import { ActionLogger } from './components/action-logger.js';
+import { ActionLogger } from './components/ActionLogger.js';
+import PathBar from './components/PathBar.js';
+import inspectReducer from './reducers/inspect-reducer.js';
+import { InspectMenus } from './reducers/inspect-actions.js';
 
-interface Action {
-  type: string;
-  data?: object;
-}
-
-interface MenuSelectAction extends Action {
-  type: 'MENU_SELECT',
-  data: {
-    menuName: string;
-    selectedValue: any;
-  }
-}
-
-interface BackAction extends Action {
-  type: 'BACK';
-}
-
-type InspectAction = MenuSelectAction | BackAction;
+import { SelectMenu } from './menu.js';
 
 
-const inspectReducer = (state: InspectState, action: InspectAction): InspectState => {
-  let newState = { ...state };
-
-  newState.ui.message = action;
-
-  if (action.type === 'MENU_SELECT') {
-    switch (action.data.menuName) {
-      case 'InspectOptions':
-        newState.ui.files = state.epub.dir;
-        newState.ui.showFiles = true;
-        break;
-      case 'FileSelect':
-        newState.ui.selectedFile = state.epub.dir.find(f => {
-          return f.path === action.data.selectedValue
-        });
-        break;
-      case 'FileAction':
-        newState.ui.selectedAction = action.data.selectedValue;
-        break;
-    }
-
-    return newState;
-  }
-
-  if (action.type === 'BACK') {
-    if (state.ui.selectedFile) {
-      newState.ui.selectedFile = null;
-    }
-
-    if (state.ui.files) {
-      newState.ui.files = [];
-      newState.ui.showFiles = false;
-    }
-
-    return newState;
-  }
-
-  throw Error('Unknown action');
-}
-
-const inspectCmdMenu = [
-  { label: 'View Manifest (.opf file)', value: 'manifest' },
-  { label: 'Configure transforms', value: 'config' },
-  { label: 'Browse Contents', value: 'browse' },
+const sub_commands = [
+  { value: 'manifest', label: 'View Manifest (.opf file)' },
+  { value: 'config', label: 'Configure transforms' },
+  { value: 'files', label: 'Browse Contents' },
 ];
 
 
 export type InspectScreenProps = {
   initialState: InspectState;
 }
-const InspectScreen = ({ initialState }: InspectScreenProps) => {
+const InspectScreen: React.FC<InspectScreenProps> = ({ initialState }) => {
   const { exit } = useApp();
-  const { isFocused } = useFocus();
+  const { disableFocus, focus } = useFocusManager();
+  disableFocus();
+
   const [ state, dispatch ] = useReducer(inspectReducer, initialState);
 
-  let { epub, ui } = state;
-  let { message, files, selectedFile, showFiles, selectedAction } = ui;
+  let { epub, ui, selections } = state;
+  let { message, files, showFiles } = ui;
+  let { subcommand, file, action } = selections;
 
+  const SubCommands = useMemo(() => SelectMenu.fromOptions(sub_commands), []);
+
+  if (subcommand) {
+    SubCommands.select(subcommand);
+  } else {
+    SubCommands.clear();
+  }
+
+  SubCommands.isEmpty() && focus('MainMenu');
+  SubCommands.is('files') && focus('FileList');
+  SubCommands.is('files') && isNonNull(file) && focus('FileActions')
 
   return (
-    <LayoutColumn borderColor="blue" borderStyle="round">
-      <Box>
-        { selectedFile ?
-          <Text>Nice! Let's "{selectedAction}" on file "{selectedFile.path}"</Text> :
-          <Text>Waiting for selection</Text>
-        }
-      </Box>
+    <LayoutColumn borderColor="yellow" borderStyle="round">
+      <PathBar label="Inspect" components={[
+        () => subcommand ? SubCommands.getLabel() : null,
+        () => file ? file.path : null,
+        () => action ? action : null,
+      ]} />
       <LayoutColumn borderColor="red" borderStyle="round">
         <Box>
           <ActionMenu
+            id="MainMenu"
             label="Inspect Options"
-            isVisible={!isNonNull(selectedAction) && files.length === 0}
-            isFocused={!isNonNull(selectedAction) && files.length === 0}
-            options={inspectCmdMenu}
+            isActive={!isNonNull(subcommand)}
+            options={sub_commands}
             onSelect={item => dispatch({
               type: 'MENU_SELECT',
               data: {
-                menuName: 'InspectOptions',
-                selectedValue: item
+                menu: InspectMenus.subcommand,
+                value: item
               }
             })}
             onBack={exit}/>
-          <FileList
-            files={files}
-            filter={null}
-            isVisible={files.length > 0}
-            selectedFile={selectedFile}
-            onBack={() => dispatch({ type: 'BACK' })}
-            onAction={action => dispatch({
-              type: 'MENU_SELECT',
-              data: {
-                menuName: 'FileAction',
-                selectedValue: action
-              }
-            })}
-            onSelect={item => dispatch({
-              type: 'MENU_SELECT',
-              data: {
-                menuName: 'FileSelect',
-                selectedValue: item.path
-              }
-            })}
-            onQuit={exit} />
+          {SubCommands.is('files') ?
+            <FileList
+              dispatch={dispatch}
+              label="FileList"
+              files={files}
+              filter={null}
+              selectedFile={file}
+              onBack={() => dispatch({ type: 'BACK' })}
+              onAction={action => dispatch({
+                type: 'MENU_SELECT',
+                data: {
+                  menu: InspectMenus.file_action,
+                  value: action
+                }
+              })}
+              onSelect={item => dispatch({
+                type: 'MENU_SELECT',
+                data: {
+                  menu: InspectMenus.file,
+                  value: item.path
+                }
+              })}
+              onQuit={exit} />
+          : null}
         </Box>
       </LayoutColumn>
       <Box width={50} borderColor="red">

@@ -1,5 +1,6 @@
-import React, { Children, type ReactNode } from 'react';
+import React, { Children, useContext, type ReactNode } from 'react';
 import { Box, BoxProps, Text, useFocus } from 'ink';
+import DebugContext from '../hooks/debug-context.js';
 
 type Props = {
   focusBorder?: boolean;
@@ -11,10 +12,14 @@ export const LayoutColumn = ({
   children,
   ...props
 }: Props) => {
+  const debug = useContext(DebugContext);
 
   let isFocused = false;
   if (focusBorder) {
-    isFocused = useFocus().isFocused;
+    isFocused = useFocus({
+      autoFocus: false,
+      isActive: false
+    }).isFocused;
   }
 
   return (
