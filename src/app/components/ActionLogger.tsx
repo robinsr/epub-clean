@@ -12,7 +12,7 @@ type ActionLoggerProps = {
   message?: object;
   messages?: string[];
 };
-export const ActionLogger: React.FC<ActionLoggerProps> = ({
+const ActionLogger: React.FC<ActionLoggerProps> = ({
   message, messages
 }) => {
   const debug = useContext(DebugContext);
@@ -36,3 +36,5 @@ export const ActionLogger: React.FC<ActionLoggerProps> = ({
     </Box>
   );
 };
+
+export default ActionLogger;

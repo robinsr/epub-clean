@@ -2,6 +2,7 @@ import { InspectAction, InspectMenus } from './inspect-actions.js';
 import { EpubFile } from '../../epub/mimetypes.js';
 import { EpubPackage } from '../../epub/manifest.js';
 import { SelectMenu } from '../menu.js';
+import { extractFile } from '../../epub/fs.js';
 
 export interface EpubContext {
   path: string;
@@ -27,13 +28,13 @@ export interface InspectState {
   ui: InspectUI;
 }
 
-const inspectReducer = (state: InspectState, action: InspectAction): InspectState => {
+const inspectReducer = (state: InspectState, { type, data }: InspectAction): InspectState => {
   let newState = { ...state };
 
-  newState.ui.message = action;
+  newState.ui.message = { type, data };
 
-  if (action.type === 'MENU_SELECT') {
-    let { menu, value } = action.data;
+  if (type === 'MENU_SELECT') {
+    let { menu, value } = data;
     let { subcommand, file, operation } = state.selections;
 
     switch (menu) {
@@ -45,13 +46,18 @@ const inspectReducer = (state: InspectState, action: InspectAction): InspectStat
         break;
       case InspectMenus.file_action:
         newState.selections.operation = operation.select(value);
+
+        if (data.value === 'view-file') {
+          console.log(`reading file for ${file.getValue()}`)
+        }
+
         break;
     }
 
     return newState;
   }
 
-  if (action.type === 'MENU_CLOSE') {
+  if (type === 'MENU_CLOSE') {
     let { subcommand, file, operation } = state.selections;
 
     if (file.hasSelection()) {

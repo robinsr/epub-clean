@@ -53,24 +53,26 @@ const ActionMenu = <T,>({ id, label, options, limit, isActive, onSelect, onBack,
   }
 
   return (
-    <Box flexDirection="column" {...borders}>
-        {label ?
-          <Box flexGrow={0}>
-            <Text color={'gray'}>
-              {heading}
-              <Newline />
-              {'-'.repeat(heading.length)}
-            </Text>
-          </Box>
-          : null}
-      <Box flexGrow={1}>
-        <SelectInput
-          items={options}
-          limit={limit}
-          onSelect={handleSelect}
-          onHighlight={handleHighlight}
-          isFocused={isFocused}
-          {...props} />
+    <Box>
+      <Box flexDirection="column" {...borders}>
+          {label ?
+            <Box flexGrow={0}>
+              <Text color={'gray'}>
+                {heading}
+                <Newline />
+                {'-'.repeat(heading.length)}
+              </Text>
+            </Box>
+            : null}
+        <Box flexGrow={1}>
+          <SelectInput
+            items={options}
+            limit={limit}
+            onSelect={handleSelect}
+            onHighlight={handleHighlight}
+            isFocused={isFocused}
+            {...props} />
+        </Box>
       </Box>
     </Box>
   );

@@ -1,9 +1,9 @@
 import logger from '../util/log.js';
-import renderScreen from '../screens/App.js';
-import InspectScreen from '../screens/Inspect.js';
-import { extractFile, getDirectoryList, getManifest } from '../epub/fs.js';
-import { InspectState } from '../screens/reducers/inspect-reducer.js';
-import { MenuOption, SelectMenu } from '../screens/menu.js';
+import renderScreen from '../app/App.js';
+import InspectScreen from '../app/Inspect.js';
+import { getDirectoryList, getManifest } from '../epub/fs.js';
+import { InspectState } from '../app/reducers/inspect-reducer.js';
+import { MenuOption, SelectMenu } from '../app/menu.js';
 import { EpubFile } from '../epub/mimetypes.js';
 import { basename, extname } from 'node:path';
 import { sortByGetter } from '../util/sort.js';

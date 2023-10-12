@@ -49,7 +49,7 @@ export class SelectMenu<T> {
   }
 
   isEmpty(): boolean {
-    return !this.selected;
+    return this.selected == null;
   }
 
   hasSelection(): boolean {
@@ -63,5 +63,8 @@ export class SelectMenu<T> {
   getValue(): T {
     return this.selected ? this.selected.value : null;
   }
-}
 
+  getProperty(key: string): any {
+    return this.hasSelection() ? this.selected[key] : null;
+  }
+}

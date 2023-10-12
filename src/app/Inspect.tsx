@@ -1,11 +1,24 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { ReactNode, useEffect, useReducer } from 'react';
 import { Box, useFocusManager, useApp } from 'ink';
 import ActionMenu from './components/ActionMenu.js';
 import LayoutColumn from './components/LayoutColumn.js';
-import { ActionLogger } from './components/ActionLogger.js';
+import ActionLogger from './components/ActionLogger.js';
+import FileViewer from './components/FileViewer.js';
 import PathBar from './components/PathBar.js';
 import inspectReducer, { InspectState } from './reducers/inspect-reducer.js';
 import { InspectMenus } from './reducers/inspect-actions.js';
+
+type ConditionalProps = {
+  when: () => boolean;
+  readonly children?: ReactNode
+}
+const Conditional = ({ when, children }: ConditionalProps) => {
+  if (when()) {
+    return (<>{children}</>)
+  }
+
+  return null;
+}
 
 export type InspectScreenProps = {
   initialState: InspectState;
@@ -41,7 +54,10 @@ const InspectScreen: React.FC<InspectScreenProps> = ({ initialState }) => {
         operation.getLabel(),
       ]} />
       <LayoutColumn borderColor="red" borderStyle="round">
-        <Box>
+        <Conditional when={() => operation.is('view-file')}>
+          <FileViewer code={'I am some html (trust me)'} language={'html'} />
+        </Conditional>
+        <Conditional when={() => operation.isEmpty()}>
           <ActionMenu
             id="MainMenu"
             label="Inspect Options"
@@ -56,52 +72,50 @@ const InspectScreen: React.FC<InspectScreenProps> = ({ initialState }) => {
             })}
             onBack={exit}
             onQuit={exit} />
-          {subcommand.is('files') ?
+        {subcommand.is('files') &&
+          <ActionMenu
+            id="FileList"
+            label="Epub Contents"
+            limit={12}
+            options={file.options}
+            isActive={file.isEmpty()}
+            onBack={() => dispatch({
+              type: 'MENU_CLOSE',
+              data: {
+                menu: InspectMenus.file
+              }
+            })}
+            onSelect={item => dispatch({
+              type: 'MENU_SELECT',
+              data: {
+                menu: InspectMenus.file,
+                value: item.value
+              }
+            })}
+            onQuit={exit} />}
+        {file.hasSelection() &&
+          <Box flexGrow={0}>
             <ActionMenu
-              id="FileList"
-              label="Epub Contents"
-              limit={12}
-              options={file.options}
-              isActive={file.isEmpty()}
+              id="FileActions"
+              label={'Options for ' + file.getValue()?.path}
+              options={operation.options}
+              isActive={operation.isEmpty()}
               onBack={() => dispatch({
                 type: 'MENU_CLOSE',
                 data: {
-                  menu: InspectMenus.file
+                  menu: InspectMenus.file_action
                 }
               })}
-              onSelect={item => dispatch({
+              onSelect={action => dispatch({
                 type: 'MENU_SELECT',
                 data: {
-                  menu: InspectMenus.file,
-                  value: item.value
+                  menu: InspectMenus.file_action,
+                  value: action.value
                 }
               })}
               onQuit={exit} />
-          : null}
-          {file.hasSelection() ?
-            <Box flexGrow={0}>
-              <ActionMenu
-                id="FileActions"
-                label={'Options for ' + file.getValue()?.path}
-                options={operation.options}
-                isActive={operation.isEmpty()}
-                onBack={() => dispatch({
-                  type: 'MENU_CLOSE',
-                  data: {
-                    menu: InspectMenus.file_action
-                  }
-                })}
-                onSelect={action => dispatch({
-                  type: 'MENU_SELECT',
-                  data: {
-                    menu: InspectMenus.file_action,
-                    value: action.value
-                  }
-                })}
-                onQuit={exit} />
-            </Box>
-          : null}
-        </Box>
+          </Box>}
+        </Conditional>
       </LayoutColumn>
       <Box width={50} borderColor="red">
         <ActionLogger message={message} />
