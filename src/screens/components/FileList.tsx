@@ -16,19 +16,18 @@ let fileSorter = sortByGetter<EpubFile>(e => {
 });
 
 type FileListProps = {
-  dispatch: React.Dispatch<Action>;
+  id?: string;
   label: string;
   files: EpubFile[];
-  selectedFile: EpubFile;
-  filter?: string; // mimetype
-  onBack: () => void;
-  onSelect: (file: EpubFile) => void;
-  onAction: (action: string) => void;
+  selected: EpubFile;
+  filter?: string; // TODO: Sort by mimetype
+  onSelect?: (file: EpubFile) => void;
+  onBack?: () => void;
   onQuit: () => void;
 }
 
-const FileList = ({ dispatch, label, files = [], selectedFile, onAction, onBack, onSelect, onQuit }: FileListProps) => {
-  const { isFocused, borders } = useBorderFocus({ autoFocus: true, id: label });
+const FileList: React.FC<FileListProps> = ({ id, label, files = [], selected, onBack, onSelect, onQuit }) => {
+  const { isFocused, borders } = useBorderFocus({ autoFocus: true, id: id || label });
 
   const [ highlighted, setHighlighted ] = useState({
     label: null, value: null
@@ -54,62 +53,30 @@ const FileList = ({ dispatch, label, files = [], selectedFile, onAction, onBack,
     if (key.rightArrow) {
       handleSelect(highlighted);
     }
-
-    if (selectedFile) {
-      return;
-    }
   }, { isActive: isFocused });
 
   const handleSelect = item => {
-		onSelect(files.find(file => file.path === item.value));
+		onSelect(files.find(opt => opt.path === item.value));
 	};
 
   const handleHighlight = item => {
     setHighlighted(item);
   }
 
-  const doWithFile = (action: string) => {
-    onAction(action);
-  }
-
-  let items = files.sort(fileSorter).map(file => ({
-    label: file.path, value: file.path
-  }));
-
-  let fileActions = [
-    { label: 'View File', value: 'view-file' },
-    { label: 'List Selectors', value: 'list-selectors' },
-    { label: 'Preview Changes', value: 'show-diff' },
-    { label: 'Reformat', value: 'format' },
-    { label: 'Delete', value: 'delete' },
-  ];
-
   return (
-    <LayoutColumn>
-      <Box>
-        <LayoutRow>
-          <Box flexGrow={0} {...borders}>
-            <SelectInput
-              limit={12}
-              items={items}
-              isFocused={isFocused}
-              onSelect={handleSelect}
-              onHighlight={handleHighlight}/>
-          </Box>
-          {selectedFile ?
-            <Box flexGrow={0}>
-              <ActionMenu
-                id="FileActions"
-                label={'Options for ' + selectedFile.path}
-                options={fileActions}
-                isActive={isNonNull(selectedFile)}
-                onSelect={doWithFile}
-                onBack={onBack}/>
-            </Box>
-          : null}
-        </LayoutRow>
-      </Box>
-    </LayoutColumn>
+    <ActionMenu
+      id={id}
+      label={'Epub Contents'}
+      limit={12}
+      options={files.sort(fileSorter).map(f => ({
+        label: f.path,
+        value: f.path
+      }))}
+      isActive={isFocused}
+      onSelect={handleSelect}
+      onHighlight={handleHighlight}
+      onBack={onBack}
+    />
   );
 }
 

@@ -1,47 +1,66 @@
 
 
-export interface MenuOption {
+export interface MenuOption<T> {
   label: string;
-  value: string;
+  value: T;
+  key?: string;
 }
 
-export class SelectMenu {
-  selected: MenuOption;
+export class SelectMenu<T> {
 
-  constructor(public options: MenuOption[]) {
+  protected constructor (
+    public options: MenuOption<T>[],
+    public selected?: MenuOption<T>) {
   }
 
-  static fromOptions(opts: MenuOption[]) {
-    return new SelectMenu(opts);
+  static from<T>(opts: MenuOption<T>[]): SelectMenu<T> {
+    return new SelectMenu<T>(opts);
   }
 
-  select(str: string) {
-    if (str) {
-      this.selected = this.options.find(opt => {
-        return opt.value === str || opt.label === str;
-      });
+  select(value: number): SelectMenu<T>;
+  select(value: string): SelectMenu<T>;
+  select(value: string | number): SelectMenu<T> {
+    if (value && Number.isInteger(value) && Object.hasOwn(this.options, value)) {
+      return new SelectMenu([ ...this.options ], this.options.at(value as number));
     }
+
+    let matchesLabel = this.options.find(opt => Object.is(opt.label, value));
+    let matchesValue = this.options.find(opt => Object.is(opt.value, value));
+
+    if (matchesLabel || matchesValue) {
+      return new SelectMenu([ ...this.options ], matchesLabel || matchesValue);
+    }
+
+    throw new Error(`Menu selection error; No item matching [${value}]`);
   }
 
-  clear() {
-    this.selected = null;
+  clear(): SelectMenu<T> {
+    return new SelectMenu([ ...this.options ]);
   }
 
-  is(str: string) {
+  is(obj: string | T): boolean {
+    return this.isSelected(obj);
+  }
+
+  isSelected(obj: string | T): boolean {
     return this.selected && (
-      this.selected.value === str ||
-      this.selected.label === str);
+      Object.is(this.selected.label, obj) ||
+      Object.is(this.selected.value, obj));
   }
 
-  isEmpty() {
-    return this.selected == null;
+  isEmpty(): boolean {
+    return !this.selected;
   }
 
-  getLabel() {
+  hasSelection(): boolean {
+    return !!this.selected;
+  }
+
+  getLabel(): string {
     return this.selected ? this.selected.label : null;
   }
 
-  getValue() {
+  getValue(): T {
     return this.selected ? this.selected.value : null;
   }
 }

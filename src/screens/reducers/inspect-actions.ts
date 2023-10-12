@@ -1,21 +1,24 @@
 import { Action } from './actions.js';
 
 export enum InspectMenus {
-  subcommand,
-  file,
-  file_action
+  subcommand = 'subcommand',
+  file = 'file',
+  file_action = 'file_action'
 }
 
 export interface MenuSelectAction extends Action {
   type: 'MENU_SELECT',
   data: {
     menu: InspectMenus,
-    value: string;
+    value: any;
   }
 }
 
 export interface BackAction extends Action {
-  type: 'BACK';
+  type: 'MENU_CLOSE';
+  data: {
+    menu: InspectMenus
+  }
 }
 
 export interface KeyAction extends Action {

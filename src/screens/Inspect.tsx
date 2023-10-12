@@ -1,23 +1,11 @@
-import React, { useState, useEffect, useReducer, useMemo } from 'react';
-import { Box, Text, useFocusManager, useApp, useFocus, useInput } from 'ink';
-import { isNonNull, isEmpty } from 'remeda';
-import FileList from './components/FileList.js';
+import React, { useEffect, useReducer } from 'react';
+import { Box, useFocusManager, useApp } from 'ink';
 import ActionMenu from './components/ActionMenu.js';
 import LayoutColumn from './components/LayoutColumn.js';
 import { ActionLogger } from './components/ActionLogger.js';
 import PathBar from './components/PathBar.js';
-import inspectReducer from './reducers/inspect-reducer.js';
+import inspectReducer, { InspectState } from './reducers/inspect-reducer.js';
 import { InspectMenus } from './reducers/inspect-actions.js';
-
-import { SelectMenu } from './menu.js';
-
-
-const sub_commands = [
-  { value: 'manifest', label: 'View Manifest (.opf file)' },
-  { value: 'config', label: 'Configure transforms' },
-  { value: 'files', label: 'Browse Contents' },
-];
-
 
 export type InspectScreenProps = {
   initialState: InspectState;
@@ -25,71 +13,93 @@ export type InspectScreenProps = {
 const InspectScreen: React.FC<InspectScreenProps> = ({ initialState }) => {
   const { exit } = useApp();
   const { disableFocus, focus } = useFocusManager();
-  disableFocus();
 
   const [ state, dispatch ] = useReducer(inspectReducer, initialState);
 
-  let { epub, ui, selections } = state;
-  let { message, files, showFiles } = ui;
-  let { subcommand, file, action } = selections;
+  let { epub } = state;
+  let { message } = state.ui;
+  let { subcommand, file, operation } = state.selections;
 
-  const SubCommands = useMemo(() => SelectMenu.fromOptions(sub_commands), []);
-
-  if (subcommand) {
-    SubCommands.select(subcommand);
-  } else {
-    SubCommands.clear();
-  }
-
-  SubCommands.isEmpty() && focus('MainMenu');
-  SubCommands.is('files') && focus('FileList');
-  SubCommands.is('files') && isNonNull(file) && focus('FileActions')
+  useEffect(() => {
+    // Basically a router. Where to focus based on current state
+    if (subcommand.isEmpty()) {
+      focus('MainMenu');
+    }
+    if (subcommand.is('files') && file.isEmpty()) {
+      focus('FileList');
+    }
+    if (subcommand.is('files') && file.hasSelection()) {
+      focus('FileActions');
+    }
+  }, [ state ]);
 
   return (
     <LayoutColumn borderColor="yellow" borderStyle="round">
-      <PathBar label="Inspect" components={[
-        () => subcommand ? SubCommands.getLabel() : null,
-        () => file ? file.path : null,
-        () => action ? action : null,
+      <PathBar base="Inspect" components={[
+        () => subcommand.getLabel(),
+        file.getLabel(),
+        operation.getLabel(),
       ]} />
       <LayoutColumn borderColor="red" borderStyle="round">
         <Box>
           <ActionMenu
             id="MainMenu"
             label="Inspect Options"
-            isActive={!isNonNull(subcommand)}
-            options={sub_commands}
+            isActive={subcommand.isEmpty()}
+            options={subcommand.options}
             onSelect={item => dispatch({
               type: 'MENU_SELECT',
               data: {
                 menu: InspectMenus.subcommand,
-                value: item
+                value: item.value
               }
             })}
-            onBack={exit}/>
-          {SubCommands.is('files') ?
-            <FileList
-              dispatch={dispatch}
-              label="FileList"
-              files={files}
-              filter={null}
-              selectedFile={file}
-              onBack={() => dispatch({ type: 'BACK' })}
-              onAction={action => dispatch({
-                type: 'MENU_SELECT',
+            onBack={exit}
+            onQuit={exit} />
+          {subcommand.is('files') ?
+            <ActionMenu
+              id="FileList"
+              label="Epub Contents"
+              limit={12}
+              options={file.options}
+              isActive={file.isEmpty()}
+              onBack={() => dispatch({
+                type: 'MENU_CLOSE',
                 data: {
-                  menu: InspectMenus.file_action,
-                  value: action
+                  menu: InspectMenus.file
                 }
               })}
               onSelect={item => dispatch({
                 type: 'MENU_SELECT',
                 data: {
                   menu: InspectMenus.file,
-                  value: item.path
+                  value: item.value
                 }
               })}
               onQuit={exit} />
+          : null}
+          {file.hasSelection() ?
+            <Box flexGrow={0}>
+              <ActionMenu
+                id="FileActions"
+                label={'Options for ' + file.getValue()?.path}
+                options={operation.options}
+                isActive={operation.isEmpty()}
+                onBack={() => dispatch({
+                  type: 'MENU_CLOSE',
+                  data: {
+                    menu: InspectMenus.file_action
+                  }
+                })}
+                onSelect={action => dispatch({
+                  type: 'MENU_SELECT',
+                  data: {
+                    menu: InspectMenus.file_action,
+                    value: action.value
+                  }
+                })}
+                onQuit={exit} />
+            </Box>
           : null}
         </Box>
       </LayoutColumn>

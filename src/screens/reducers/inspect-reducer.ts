@@ -1,53 +1,64 @@
 import { InspectAction, InspectMenus } from './inspect-actions.js';
+import { EpubFile } from '../../epub/mimetypes.js';
+import { EpubPackage } from '../../epub/manifest.js';
+import { SelectMenu } from '../menu.js';
 
+export interface EpubContext {
+  path: string;
+  dir: EpubFile[];
+  manifest: EpubPackage
+}
+
+export interface MenuSelections {
+  subcommand?: SelectMenu<string>;
+  file?: SelectMenu<EpubFile>;
+  operation?: SelectMenu<string>;
+}
+
+export interface InspectUI {
+  files: EpubFile[];
+  showFiles: boolean;
+  message: object | null;
+}
+
+export interface InspectState {
+  epub: EpubContext;
+  selections: MenuSelections;
+  ui: InspectUI;
+}
 
 const inspectReducer = (state: InspectState, action: InspectAction): InspectState => {
   let newState = { ...state };
 
   newState.ui.message = action;
 
-  if (action.type === 'KEYPRESS') {
-    return newState;
-  }
-
   if (action.type === 'MENU_SELECT') {
     let { menu, value } = action.data;
+    let { subcommand, file, operation } = state.selections;
 
     switch (menu) {
       case InspectMenus.subcommand:
-        newState.selections.subcommand = value;
-        newState.ui.files = state.epub.dir;
-        newState.ui.showFiles = true;
+        newState.selections.subcommand = subcommand.select(value);
         break;
       case InspectMenus.file:
-        newState.selections.file = state.epub.dir.find(f => {
-          return f.path === value
-        });
+        newState.selections.file = file.select(value);
         break;
       case InspectMenus.file_action:
-        newState.selections.action = value;
+        newState.selections.operation = operation.select(value);
         break;
     }
 
     return newState;
   }
 
-  if (action.type === 'BACK') {
-    if (state.selections.action) {
-      newState.selections.action = null;
-      return newState;
-    }
+  if (action.type === 'MENU_CLOSE') {
+    let { subcommand, file, operation } = state.selections;
 
-    if (state.selections.file) {
-      newState.selections.file = null;
-      return newState;
-    }
-
-    if (state.selections.subcommand) {
-      newState.selections.subcommand = null;
-      newState.ui.files = [];
-      newState.ui.showFiles = false;
-      return newState;
+    if (file.hasSelection()) {
+      newState.selections.operation = operation.clear();
+      newState.selections.file = file.clear();
+    } else if (subcommand.hasSelection()) {
+      newState.selections.subcommand = subcommand.clear();
     }
 
     return newState;
