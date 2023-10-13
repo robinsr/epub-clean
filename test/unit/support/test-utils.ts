@@ -2,6 +2,7 @@ import { inspect as nodeInspect } from 'node:util';
 import colors from 'colors';
 import Mocha from 'mocha';
 import addContext from 'mochawesome/addContext.js';
+import { expect } from 'chai';
 
 export const inspect = (obj: any) => {
   console.log(nodeInspect(obj, { depth: 12 }));
@@ -59,4 +60,20 @@ export const wrap = function(ctx: any, cb: Function) {
   return function (done) {
     wrapErrCtx(test, ctx, done, cb);
   }
+}
+
+export const planEach = <T>(
+  expectedCount: number,
+  items: T[],
+  testFn: (item: T) => void) => {
+  let count = 0;
+
+  items.forEach(item => {
+    testFn(item);
+    count++;
+  });
+
+  expect(count).to.eq(expectedCount,
+    `Expected ${expectedCount} tests; found ${count}`);
+
 }

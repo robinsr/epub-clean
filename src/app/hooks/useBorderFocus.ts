@@ -7,11 +7,10 @@ type FocusParams = {
     autoFocus?: boolean;
     id?: string;
 };
-
-const useBorderFocus = (params: FocusParams) => {
+const useBorderFocus = ({ isActive, autoFocus, id }: FocusParams) => {
   const debug = useContext(DebugContext);
 
-  const { isFocused } = useFocus(params);
+  const { isFocused } = useFocus({ isActive, autoFocus, id });
 
   let borders = {}
 

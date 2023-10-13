@@ -1,5 +1,3 @@
-
-
 export interface MenuOption<T> {
   label: string;
   value: T;
@@ -7,7 +5,6 @@ export interface MenuOption<T> {
 }
 
 export class SelectMenu<T> {
-
   protected constructor (
     public options: MenuOption<T>[],
     public selected?: MenuOption<T>) {

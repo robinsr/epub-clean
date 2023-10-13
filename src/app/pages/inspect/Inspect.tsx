@@ -1,12 +1,13 @@
 import React, { ReactNode, useEffect, useReducer } from 'react';
 import { Box, useFocusManager, useApp } from 'ink';
-import ActionMenu from './components/ActionMenu.js';
-import LayoutColumn from './components/LayoutColumn.js';
-import ActionLogger from './components/ActionLogger.js';
-import FileViewer from './components/FileViewer.js';
-import PathBar from './components/PathBar.js';
-import inspectReducer, { InspectState } from './reducers/inspect-reducer.js';
-import { InspectMenus } from './reducers/inspect-actions.js';
+import ActionMenu from '../../components/ActionMenu.js';
+import LayoutColumn from '../../components/LayoutColumn.js';
+import ActionLogger from '../../components/ActionLogger.js';
+import FileViewer from '../../components/FileViewer.js';
+import PathBar from '../../components/PathBar.js';
+import inspectReducer from './inspect-reducer.js';
+import { InspectMenus } from './inspect-actions.js';
+import { InspectState } from './inspect-model.js';
 
 type ConditionalProps = {
   when: () => boolean;
@@ -38,16 +39,21 @@ const InspectScreen: React.FC<InspectScreenProps> = ({ initialState }) => {
     if (subcommand.isEmpty()) {
       focus('MainMenu');
     }
-    if (subcommand.is('files') && file.isEmpty()) {
-      focus('FileList');
-    }
-    if (subcommand.is('files') && file.hasSelection()) {
-      focus('FileActions');
+    if (subcommand.is('files')) {
+      if (operation.is('view-file')) {
+        focus('#file-viewer')
+      }
+      if (file.hasSelection()) {
+        focus('FileActions');
+      }
+      if (file.isEmpty()) {
+        focus('FileList');
+      }
     }
   }, [ state ]);
 
   return (
-    <LayoutColumn borderColor="yellow" borderStyle="round">
+    <LayoutColumn borderStyle="round" borderColor="white">
       <PathBar base="Inspect" components={[
         () => subcommand.getLabel(),
         file.getLabel(),
@@ -55,7 +61,16 @@ const InspectScreen: React.FC<InspectScreenProps> = ({ initialState }) => {
       ]} />
       <LayoutColumn borderColor="red" borderStyle="round">
         <Conditional when={() => operation.is('view-file')}>
-          <FileViewer code={'I am some html (trust me)'} language={'html'} />
+          <FileViewer
+            file={file.getValue()}
+            epubPath={epub.path}
+            onBack={() => dispatch({
+            type: 'MENU_CLOSE',
+              data: {
+                menu: InspectMenus.file_action
+              }
+            })}
+          />
         </Conditional>
         <Conditional when={() => operation.isEmpty()}>
           <ActionMenu

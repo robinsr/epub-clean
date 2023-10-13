@@ -33,16 +33,18 @@ const ink_opts: RenderOptions = {
   patchConsole: true
 }
 
-export default function renderScreen<T,>(
+export default async function renderScreen<T,>(
   Screen: FC<T>,
   initialState: T
 ) {
 
-  render(
+  const { unmount, waitUntilExit, clear } = render(
     <TerminalContainer>
       <Screen {...initialState} />
     </TerminalContainer>,
     ink_opts
   );
+
+  clear();
 }
 

@@ -1,32 +1,7 @@
 import { InspectAction, InspectMenus } from './inspect-actions.js';
-import { EpubFile } from '../../epub/mimetypes.js';
-import { EpubPackage } from '../../epub/manifest.js';
-import { SelectMenu } from '../menu.js';
-import { extractFile } from '../../epub/fs.js';
+import { InspectState } from './inspect-model.js';
 
-export interface EpubContext {
-  path: string;
-  dir: EpubFile[];
-  manifest: EpubPackage
-}
 
-export interface MenuSelections {
-  subcommand?: SelectMenu<string>;
-  file?: SelectMenu<EpubFile>;
-  operation?: SelectMenu<string>;
-}
-
-export interface InspectUI {
-  files: EpubFile[];
-  showFiles: boolean;
-  message: object | null;
-}
-
-export interface InspectState {
-  epub: EpubContext;
-  selections: MenuSelections;
-  ui: InspectUI;
-}
 
 const inspectReducer = (state: InspectState, { type, data }: InspectAction): InspectState => {
   let newState = { ...state };

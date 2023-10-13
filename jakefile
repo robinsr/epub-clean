@@ -25,7 +25,8 @@ namespace('build', function () {
     jake.cpR('./config', 'lib');
   });
 
-  newTask('ts - Compile source typescript', exec('tsc -p tsconfig-build.json'));
+  newTask('ts - Compile source typescript',
+    exec('tsc -p tsconfig-build.json'));
 
   newTask('all - Builds the project', [
     'build:config',
@@ -43,6 +44,9 @@ namespace('run', () => {
 
 namespace('test', () => {
   let docPath = join('test/functional/test-doc.html');
+
+  newTask('compile - Compile test ts (for compile errors)',
+    exec('tsc -p tsconfig.json'));
 
   newTask('unit - Run unit tests', exec(['mocha']));
 

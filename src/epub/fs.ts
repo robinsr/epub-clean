@@ -1,6 +1,6 @@
 import { createReadStream } from 'node:fs';
 import { CentralDirectory, Open, ParseOne } from 'unzipper';
-import { EpubFile, getMimeType } from './mimetypes.js';
+import { EpubFile, getContentType, getHighlightLang, isTextualFileType } from './mimetypes.js';
 import logger from '../util/log.js';
 import { EpubPackage, parseManifest } from './manifest.js';
 
@@ -12,17 +12,19 @@ export const getDirectoryList = async (filename: string): Promise<EpubFile[]> =>
   return directory.files
     .filter(file => file.type === 'File')
     .map(file => ({
-      mime: getMimeType(file.path),
-      path: file.path
+      contentType: getContentType(file.path),
+      path: file.path,
+      isTextual: isTextualFileType(file.path),
+      language: getHighlightLang(file.path)
     }));
 }
 
-export const extractFile = async (epubfile: string, filename: string): Promise<string> => {
+export const extractFile = async (epubPath: string, filePath: string): Promise<string> => {
   let contents = '';
 
   return new Promise((resolve, reject) => {
-    createReadStream(epubfile)
-      .pipe(ParseOne(new RegExp(filename)))
+    createReadStream(epubPath)
+      .pipe(ParseOne(new RegExp(filePath)))
       .on('data', chunk => contents += chunk.toString())
       //.on('finish', () => resolve(contents))
       .on('end', () => resolve(contents))
@@ -33,12 +35,12 @@ export const extractFile = async (epubfile: string, filename: string): Promise<s
   })
 }
 
-const opf_filetype = getMimeType('.opf');
+const opf_filetype = getContentType('.opf');
 
 export const getManifest = async (filename: string): Promise<EpubPackage> => {
   let epubDir = await getDirectoryList(filename);
 
-  let manifestFile = epubDir.find(file => file.mime === opf_filetype);
+  let manifestFile = epubDir.find(file => file.contentType === opf_filetype);
 
   if (manifestFile) {
     let contents = await extractFile(filename, manifestFile.path);

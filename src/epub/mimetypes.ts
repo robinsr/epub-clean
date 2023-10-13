@@ -1,36 +1,126 @@
 import mime from 'mime-types';
 
-export interface EpubFile {
-  path: string;
-  mime: string;
-}
-
 export type FileCategory = 'contents' | 'css' | 'media' | 'toc' | 'xml' | 'opf';
 
-export const getMimeType = (file: string): string => {
-  return mime.lookup(file) || 'unknown';
+export interface EpubFile {
+  path: string;
+  contentType: string;
+  isTextual: boolean;
+  language: string;
+}
+
+type ContentType = {
+  value: string;
+  type: string;
+  subtype: string;
+  suffix?: string
+}
+
+export const getContentType = (file: string): string => {
+  // epubs have a file named "mimetype"
+  if (Object.is(file, 'mimetype')) {
+    return 'text/plain'
+  }
+
+  let mimetype = mime.lookup(file);
+
+  if (!mimetype) {
+    throw new Error(`Not a mime for file: ${file}`);
+  }
+
+  return mimetype;
+}
+
+export const parseContentType = (str: string): ContentType => {
+  let type: string;
+  let subtype: string;
+  let suffix: string;
+
+  [ type, subtype ] = str.split('/');
+
+  if (subtype && subtype.includes('+')) {
+    suffix = subtype.replace(/.*\+/, '');
+    subtype = subtype.replace(/\+.*/, '');
+  }
+
+  return { value: str, type, subtype, suffix };
+}
+
+const isUTF8 = (file: string): boolean => {
+  return Object.is(mime.charset(getContentType(file)), 'UTF-8');
+}
+
+const isTextContent = (file: string): boolean => {
+  let { type, subtype, suffix } = parseContentType(getContentType(file));
+
+  if (type === 'text') {
+    return true;
+  } else if (suffix) {
+    return Object.hasOwn(mime.extensions, `text/${suffix}`);
+  } else {
+    return Object.hasOwn(mime.extensions, `text/${subtype}`);
+  }
+}
+
+export const isTextualFileType = (file: string): boolean => {
+  return isTextContent(file) || isUTF8(file);
+}
+
+export const getHighlightLang = (file: string): string => {
+  let contentType = getContentType(file);
+
+  if (contentType === 'text/plain') {
+    return 'text';
+  }
+
+  if (contentType.startsWith('text/')) {
+    return contentType.replace('text/', '');
+  }
+
+  let { type, subtype, suffix } = parseContentType(contentType)
+
+  if (suffix) {
+    return suffix;
+  } else {
+    return subtype;
+  }
+
+  // if (isUTF8(file)) {
+  //
+  //   // examples:
+  //   // "application/manifest+json" -> "json
+  //   // "application/xhtml+xml" -> "xml"
+  //   if (type === 'application' && suffix) {
+  //     return suffix;
+  //   }
+  //
+  //   // example: "application/json" -> "json"
+  //   return subtype;
+  // }
+  //
+  // return null;
 }
 
 export const filetype_mimes: Record<FileCategory, string[]> = {
   'contents': [
-    getMimeType('.html'),
-    getMimeType('.xhtml'),
+    getContentType('.html'),
+    getContentType('.xhtml'),
   ],
   'css': [
-    getMimeType('.css')
+    getContentType('.css')
   ],
   'media': [
-    getMimeType('.jpg'),
-    getMimeType('.png'),
+    getContentType('.jpg'),
+    getContentType('.png'),
   ],
   'toc': [
-    getMimeType('.ncx'), // epub2
+    getContentType('.ncx'), // epub2
   ],
   'xml': [
-    getMimeType('.xml')
+    getContentType('.xml')
   ],
   'opf': [
-    getMimeType('.opf')
+    getContentType('.opf')
   ]
 }
 

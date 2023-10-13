@@ -1,4 +1,4 @@
-import { Action } from './actions.js';
+import { Action } from '../../reducers/actions.js';
 
 export enum InspectMenus {
   subcommand = 'subcommand',

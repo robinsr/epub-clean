@@ -2,7 +2,7 @@ import React, { useState, useEffect} from 'react';
 import { Box, Newline, Spacer, Text, useApp, useFocus, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import useBorderFocus from '../hooks/useBorderFocus.js';
-import { MenuOption } from '../menu.js';
+import { MenuOption } from '../utils/menu.js';
 
 type ActionMenuProps<T> = {
   id: string;
@@ -31,11 +31,7 @@ const ActionMenu = <T,>({ id, label, options, limit, isActive, onSelect, onBack,
       return onQuit();
     }
 
-    if (input === 'b') {
-      return onBack();
-    }
-
-    if (key.leftArrow) {
+    if (input === 'b' || key.leftArrow) {
       return onBack();
     }
 

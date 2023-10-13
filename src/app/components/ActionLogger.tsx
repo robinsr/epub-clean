@@ -31,7 +31,7 @@ const ActionLogger: React.FC<ActionLoggerProps> = ({
   }
 
   return (
-    <Box {...borders}>
+    <Box {...borders} width={'100%'}>
       <Text>{inspect(message, inspect_opts)}</Text>
     </Box>
   );
