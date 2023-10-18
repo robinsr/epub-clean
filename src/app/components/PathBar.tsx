@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Text } from 'ink';
+import { Box, Static, Text } from 'ink';
 import { isFunction, isString, isNonNull } from 'remeda';
+import { nanoid } from 'nanoid'
 
 
 const getPathValue = (part: StringGetter | string): string => {
@@ -20,7 +21,7 @@ const PathBar: React.FC<PathBarProps> = ({ base, components = [] }) => {
       <Text>{
         components.map(getPathValue)
           .filter(isNonNull)
-          .reduce((acc, part) => `${acc} >> ${part}`, base)
+          .reduce((acc, part) => `${acc} >> [${part}]`, `Path: [${base}]`)
         }
       </Text>
     </Box>

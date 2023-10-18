@@ -1,21 +1,24 @@
-import React, { useContext } from 'react';
-import { Box, Text } from 'ink';
+import React, { useCallback, useContext } from 'react';
+import { Box, Text, Newline } from 'ink';
 import { inspect } from 'node:util';
 import DebugContext from '../hooks/debug-context.js';
+import useScreenSize from '../hooks/useScreenSize.js';
 
-const inspect_opts = {
+const inspect_defaults = {
   colors: true,
-  depth: 3
+  depth: 3,
+  compact: true,
+  breakLength: 100
 }
 
 type ActionLoggerProps = {
-  message?: object;
-  messages?: string[];
+  messages?: object[];
 };
-const ActionLogger: React.FC<ActionLoggerProps> = ({
-  message, messages
-}) => {
+const ActionLogger = ({ messages = [] }: ActionLoggerProps) => {
   const debug = useContext(DebugContext);
+  const { width } = useScreenSize();
+
+  const inspect_opts = Object.assign({}, inspect_defaults, { breakLength: width - 10 });
 
   let borders = {}
 
@@ -26,13 +29,11 @@ const ActionLogger: React.FC<ActionLoggerProps> = ({
     }
   }
 
-  if (!message) {
-    return null;
-  }
-
   return (
-    <Box {...borders} width={'100%'}>
-      <Text>{inspect(message, inspect_opts)}</Text>
+    <Box {...borders} width={'100%'} height={9} overflow={'hidden'} flexDirection={'column'}>
+      {messages.slice(Math.max(messages.length * -1, -7)).map((msg, i) => (
+        <Text key={`message-${i}`}>{inspect(msg, inspect_opts)}</Text>
+      ))}
     </Box>
   );
 };

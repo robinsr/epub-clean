@@ -1,3 +1,5 @@
+import { observable, computed, action } from 'mobx';
+
 export interface MenuOption<T> {
   label: string;
   value: T;
@@ -5,34 +7,39 @@ export interface MenuOption<T> {
 }
 
 export class SelectMenu<T> {
-  protected constructor (
-    public options: MenuOption<T>[],
-    public selected?: MenuOption<T>) {
+
+  @observable public selected: MenuOption<T>;
+  @observable public options?: MenuOption<T>[];
+
+
+  constructor (options: MenuOption<T>[] = []) {
+    this.options = options;
   }
 
   static from<T>(opts: MenuOption<T>[]): SelectMenu<T> {
     return new SelectMenu<T>(opts);
   }
 
-  select(value: number): SelectMenu<T>;
-  select(value: string): SelectMenu<T>;
-  select(value: string | number): SelectMenu<T> {
-    if (value && Number.isInteger(value) && Object.hasOwn(this.options, value)) {
-      return new SelectMenu([ ...this.options ], this.options.at(value as number));
+  @action select(value: string | number | T) {
+    if (value && typeof value === 'number' && this.options.at(value)) {
+      this.selected = this.options.at(value);
     }
 
     let matchesLabel = this.options.find(opt => Object.is(opt.label, value));
     let matchesValue = this.options.find(opt => Object.is(opt.value, value));
 
     if (matchesLabel || matchesValue) {
-      return new SelectMenu([ ...this.options ], matchesLabel || matchesValue);
+      this.selected = matchesLabel || matchesValue;
     }
-
-    throw new Error(`Menu selection error; No item matching [${value}]`);
   }
 
-  clear(): SelectMenu<T> {
-    return new SelectMenu([ ...this.options ]);
+  @action clear() {
+    this.selected = null;
+  }
+
+  @action load(items: MenuOption<T>[]) {
+    this.selected = null;
+    this.options = items;
   }
 
   is(obj: string | T): boolean {
@@ -45,23 +52,28 @@ export class SelectMenu<T> {
       Object.is(this.selected.value, obj));
   }
 
-  isEmpty(): boolean {
+  isNot(obj: string | T, strictEql = false): boolean {
+    if (this.isEmpty && strictEql) return false;
+    if (this.isEmpty && !strictEql) return true;
+
+    return !this.isSelected(obj);
+  }
+
+  @computed get isEmpty(): boolean {
     return this.selected == null;
   }
 
-  hasSelection(): boolean {
+  @computed get hasSelection(): boolean {
     return !!this.selected;
   }
 
-  getLabel(): string {
+  @computed get label(): string {
     return this.selected ? this.selected.label : null;
   }
 
-  getValue(): T {
+  @computed get value(): T {
     return this.selected ? this.selected.value : null;
   }
-
-  getProperty(key: string): any {
-    return this.hasSelection() ? this.selected[key] : null;
-  }
 }
+
+export default SelectMenu;

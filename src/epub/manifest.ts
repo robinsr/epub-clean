@@ -116,10 +116,10 @@ export interface PkgAttributes {
 }
 
 export interface EpubPackage {
-  attributes: PkgAttributes;
-  metadata: PkgMetadata;
-  manifest: PkgManifest;
-  spine: PkgSpine;
+  attributes?: PkgAttributes;
+  metadata?: PkgMetadata;
+  manifest?: PkgManifest;
+  spine?: PkgSpine;
   guide?: PkgGuide;
 }
 

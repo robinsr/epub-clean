@@ -1,15 +1,37 @@
 import { stdout } from 'node:process';
-import { basename, relative } from 'node:path';
+import { basename, dirname, relative, resolve } from 'node:path';
 import { install } from 'source-map-support'
 import colors from 'colors';
 import * as R from 'remeda';
 import log4js from 'log4js';
 import { LoggingEvent } from 'log4js';
 import { callerFn, getSourceTS }  from './caller.js';
-import { flags, log_config, LogLevels } from './config.js';
+import { flags, log_config as raw_config, LogConfig, LogLevels } from './config.js';
 import { point, json } from './string.js';
 
 install();
+
+const _dirname = dirname(new URL(import.meta.url).pathname);
+
+
+const getLogConfig = (): LogConfig => {
+  if (process.env.LOG_DEVICE) {
+    let mappedAppenders = Object.keys(raw_config.appenders).map(key => ({
+      key, config: {
+        ...raw_config.appenders[key],
+        type: resolve(_dirname, 'tty-appender.cjs'),
+        device: process.env.LOG_DEVICE
+      }
+    }))
+      .reduce((acc, { key, config }) => ({ ...acc, [key]: config }) ,{})
+
+    return { ...raw_config, appenders: mappedAppenders };
+  } else {
+    return raw_config;
+  }
+}
+
+const log_config = getLogConfig();
 
 const debug_log_level = log_config.categories['debug_log'].level;
 
@@ -119,3 +141,11 @@ const logger = {
 
 export { logger as default, difflog };
 
+if (process.env.LOG_DEVICE) {
+  const replacementLog = (level: string) => (...msg: string[]) => log4js.getLogger('console')[level](msg);
+
+  console.log = replacementLog('log');
+  console.info = replacementLog('info');
+  console.warn = replacementLog('warn');
+  console.error = replacementLog('error');
+}

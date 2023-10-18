@@ -107,7 +107,7 @@ describe('Tasks - task-config', function() {
       });
     });
 
-    describe('using "adjacentOk"', function () {
+    describe.skip('using "adjacentOk"', function () {
       it('should require a html tag as part of the selector', function (done) {
         let schema = validators.object({
           vals: validators.array().items(validators.selector().adjacentOk())

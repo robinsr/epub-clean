@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from 'react';
-import { Box, Newline, Spacer, Text, useApp, useFocus, useInput } from 'ink';
+import { Box, Newline, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import useBorderFocus from '../hooks/useBorderFocus.js';
 import { MenuOption } from '../utils/menu.js';

@@ -1,5 +1,6 @@
 flags:
   debug_logging: LOG_DEBUG
+  device: LOG_DEVICE
 logging:
   categories:
     debug_log:

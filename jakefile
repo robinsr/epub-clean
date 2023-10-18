@@ -12,8 +12,21 @@ const BUILD_DIR = 'lib';
 const MAIN = join(BUILD_DIR, 'index.js');
 const ASYNC = { async: true };
 
+const WATCH_OPTS = {
+  ignoreInitial: true,
+  persistent: true
+};
+
+const EXEC_OPTS = {
+  printStderr: true,
+  printStdout: true
+}
+
+
+
 directory('lib');
 directory('lib/config');
+directory('lib/util');
 
 
 newTask('clean - removes project build directory', () => {
@@ -25,11 +38,22 @@ namespace('build', function () {
     jake.cpR('./config', 'lib');
   });
 
+  const cjsFiles = [
+    'util/tty-appender.cjs'
+  ]
+
+  newTask('copy-cjs - Copies the one-off commonjs modules to build dir', ['lib/util'], () => {
+    cjsFiles.forEach(file => {
+      jake.exec([`cp src/${file} ${BUILD_DIR}/${file}`], complete, EXEC_OPTS);
+    })
+  })
+
   newTask('ts - Compile source typescript',
     exec('tsc -p tsconfig-build.json'));
 
   newTask('all - Builds the project', [
     'build:config',
+    'build:copy-cjs',
     'build:ts'
   ], exec('chmod +x lib/index.js'));
 
@@ -39,7 +63,7 @@ namespace('build', function () {
 
 namespace('run', () => {
   newTask('default - Run default config',
-    exec(`node lib/index.js inspect "${process.env.TEST_BOOK}"`));
+    exec(`LOG_DEVICE=/dev/ttys003 node lib/index.js inspect "${process.env.TEST_BOOK}"`));
 });
 
 namespace('test', () => {
@@ -63,15 +87,7 @@ namespace('test', () => {
   );
 });
 
-const WATCH_OPTS = {
-  ignoreInitial: true,
-  persistent: true
-};
 
-const EXEC_OPTS = {
-  printStderr: true,
-  printStdout: true
-}
 
 function joinArgs(args) {
   return Array.isArray(args) ? args.join(' ') : args;

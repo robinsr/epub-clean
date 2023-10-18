@@ -84,21 +84,6 @@ export const getHighlightLang = (file: string): string => {
   } else {
     return subtype;
   }
-
-  // if (isUTF8(file)) {
-  //
-  //   // examples:
-  //   // "application/manifest+json" -> "json
-  //   // "application/xhtml+xml" -> "xml"
-  //   if (type === 'application' && suffix) {
-  //     return suffix;
-  //   }
-  //
-  //   // example: "application/json" -> "json"
-  //   return subtype;
-  // }
-  //
-  // return null;
 }
 
 export const filetype_mimes: Record<FileCategory, string[]> = {

@@ -16,6 +16,11 @@ logging:
         type: console_layout
     stdout:
       type: stdout
+    redirect:
+      type: 'src/util/tty-appender'
+      device: ''
+      layout:
+        type: console_layout
   categories:
     default:
       <<: *log-cat

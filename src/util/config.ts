@@ -6,7 +6,8 @@ export interface LogAppenders {
     type: string;
     layout?: {
       type: string;
-    }
+    },
+    [prop: string]: any;
   }
 }
 
@@ -40,6 +41,7 @@ export interface AppConfig {
 
 interface ConfigFlags {
   debug_logging: boolean;
+  device: string | null;
 }
 
 console.log('Configuration directory: ' + config.util.getEnv('NODE_CONFIG_DIR'));

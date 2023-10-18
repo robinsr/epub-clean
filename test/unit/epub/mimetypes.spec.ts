@@ -95,7 +95,7 @@ let test_cases = [
 ];
 
 
-describe.only('Util - mimetypes', function () {
+describe('Util - mimetypes', function () {
 
   describe('getContentType', function() {
     it('should return expected content-types for files', function () {

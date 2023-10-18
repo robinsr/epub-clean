@@ -1,4 +1,5 @@
 import { Action } from '../../reducers/actions.js';
+import { Location } from 'history';
 
 export enum InspectMenus {
   subcommand = 'subcommand',
@@ -30,4 +31,17 @@ export interface KeyAction extends Action {
   }
 }
 
-export type InspectAction = MenuSelectAction | BackAction | KeyAction;
+export interface MsgAction extends Action {
+  type: 'MESSAGE',
+  data: any
+}
+
+export interface NavigateAction extends Action {
+  type: 'NAVIGATE',
+  data: {
+    location: Location
+  }
+}
+
+export type InspectAction = MenuSelectAction | BackAction |
+  KeyAction | MsgAction | NavigateAction;

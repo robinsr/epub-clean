@@ -1,4 +1,5 @@
 import { isNumber} from './number.js';
+import { objGet } from './collection.js';
 
 export const sortByGetter = <T> (fn: (t: T) => string) => {
 
@@ -31,4 +32,12 @@ export const sortByGetter = <T> (fn: (t: T) => string) => {
   }
 
   return sorter;
+}
+
+
+export const sortByPick = (objPath: string) => (a: object, b: object) => {
+  let aV = objGet(a, objPath);
+  let bV = objGet(b, objPath);
+
+  return aV > bV ? -1 : aV < bV ? 1 : 0;
 }

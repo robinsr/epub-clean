@@ -1,20 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { Text, Newline, useInput, useFocus } from 'ink';
+import { Text, Newline, useInput } from 'ink';
 import { highlight, Theme } from 'cli-highlight';
 import { extractFile } from '../../epub/fs.js';
-import {
-  EpubFile
-} from '../../epub/mimetypes.js';
+import { EpubFile } from '../../epub/mimetypes.js';
 import { json } from '../../util/string.js';
+import { Scroller } from './Scroller.js';
 import useBorderFocus from '../hooks/useBorderFocus.js';
+
+
+/**
+ * Replaces tab characters with two spaces. Tab characters don't display correctly
+ */
+const replaceTabs = (str: string): string => {
+  return str.replaceAll('\u0009', '  ');
+}
 
 export interface Props {
 	file: EpubFile;
   epubPath: string;
+  width?: number;
+  height?: number;
   onBack: () => void;
 	theme?: Theme;
 }
-const FileViewer: React.FC<Props> = ({ file, epubPath, onBack, theme }) => {
+const FileViewer: React.FC<Props> = ({ file, epubPath, onBack, theme, width=100, height=25 }) => {
   const [ isLoading, setIsLoading ] = useState(true);
   const [ contents, setContents ] = useState('');
 
@@ -26,7 +35,7 @@ const FileViewer: React.FC<Props> = ({ file, epubPath, onBack, theme }) => {
     if (input === 'b' || key.leftArrow) {
       return onBack();
     }
-  })
+  });
 
   if (!file.isTextual) {
     return (
@@ -53,7 +62,7 @@ const FileViewer: React.FC<Props> = ({ file, epubPath, onBack, theme }) => {
   useEffect(() => {
     extractFile(epubPath, file.path)
       .then(contents => {
-        setContents(contents);
+        setContents(replaceTabs(contents));
         setIsLoading(false);
       })
   }, [ file, epubPath ]);
@@ -61,8 +70,12 @@ const FileViewer: React.FC<Props> = ({ file, epubPath, onBack, theme }) => {
   if (isLoading) {
     return <Text>Loading...</Text>;
   } else {
-	  return <Text>{highlightedCode}</Text>;
+	  return (
+      <Scroller width={width-1} height={height-2} content={highlightedCode} />
+    );
   }
 };
+// <ScrollArea height={20}>
+// </ScrollArea>
 
 export default FileViewer;
